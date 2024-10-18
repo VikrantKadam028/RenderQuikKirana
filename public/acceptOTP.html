@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ff3131" />
+    <title>QuikKirana | OTP Verification</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="logo.png" type="image/icon type" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .otp-container {
+        background-color: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 400px;
+      }
+      #message {
+        color: #343a40;
+        margin-top: 10px;
+        font-size: 14px;
+      }
+      #message.error {
+        color: red;
+      }
+      #message.success {
+        color: green;
+      }
+      .slogan {
+        font-size: 22px;
+        color: #343a40;
+        margin-bottom: 20px;
+      }
+      .otp-inputs {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      input {
+        width: 55px;
+        padding: 15px;
+        margin: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 24px;
+        text-align: center;
+        transition: border-color 0.3s;
+      }
+      input:focus {
+        border-color: #ff3131;
+        outline: none;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 18px;
+        background-color: #ff3131;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #d62828;
+      }
+      #loader {
+        display: none;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="otp-container">
+      <p class="slogan">Secure Your Login with OTP</p>
+      <label for="otp">Enter the OTP sent to your phone</label>
+      <div class="otp-inputs">
+        <input type="text" maxlength="1" id="otp1" required />
+        <input type="text" maxlength="1" id="otp2" required />
+        <input type="text" maxlength="1" id="otp3" required />
+        <input type="text" maxlength="1" id="otp4" required />
+      </div>
+      <button id="verifyBtn">Verify OTP</button>
+      <p id="message"></p>
+      <div id="loader">Verifying...</div>
+      <!-- Loader message -->
+    </div>
+
+    <script>
+      // Focus on the next input when the current one is filled
+      const inputs = document.querySelectorAll(".otp-inputs input");
+      inputs.forEach((input, index) => {
+        input.addEventListener("input", function () {
+          if (this.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          } else if (this.value.length === 0 && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+      });
+
+      // Function to send OTP when the page loads
+      async function sendOTP() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const phoneNumber = urlParams.get("phone");
+
+        if (!phoneNumber) {
+          showMessage("Phone number is missing.", "error");
+          return;
+        }
+
+        const response = await fetch("/send-otp", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ number: phoneNumber }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showMessage(data.message, "success");
+        } else {
+          showMessage(data.message, "error");
+        }
+      }
+
+      // Call sendOTP function when the page loads
+      sendOTP();
+
+      // Verify OTP when the button is clicked
+      let isVerifying = false; // Flag to prevent multiple submissions
+      document
+        .getElementById("verifyBtn")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+
+          if (isVerifying) {
+            return; // Prevent multiple submissions
+          }
+
+          // Collect the OTP from the inputs
+          const otpInput = Array.from(inputs)
+            .map((input) => input.value)
+            .join("");
+
+          if (otpInput.length < 4) {
+            showMessage("Please enter all digits of the OTP.", "error");
+            return;
+          }
+
+          isVerifying = true; // Set the flag to true
+          const phoneNumber = new URLSearchParams(window.location.search).get(
+            "phone"
+          );
+          const loader = document.getElementById("loader");
+
+          // Show the loader
+          loader.style.display = "block";
+
+          setTimeout(() => {
+            fetch("/verify-otp", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ number: phoneNumber, otp: otpInput }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.success) {
+                  showMessage(data.message, "success");
+                  // Redirect to name.html after successful verification
+                  setTimeout(() => {
+                    window.location.href = "name.html"; // Redirect to name.html
+                  }, 1000); // Optional: delay before redirecting
+                } else {
+                  showMessage(data.message, "error");
+                }
+              })
+              .catch((error) => {
+                showMessage("An error occurred. Please try again.", "error");
+              })
+              .finally(() => {
+                isVerifying = false; // Reset the flag
+                loader.style.display = "none"; // Hide the loader
+              });
+          }, 3000); // Show loader for 3 seconds before sending the OTP verification request
+        });
+
+      // Function to display messages
+      function showMessage(message, type) {
+        const messageElement = document.getElementById("message");
+        messageElement.textContent = message;
+        messageElement.className = type; // Add success/error class
+      }
+    </script>
+  </body>
+</html>

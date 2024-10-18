@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <link rel="manifest" href="/manifest.json" /> -->
+    <meta name="theme-color" content="#ff3131" />
+    <title>QuikKirana | Inventory Management & Billing App</title>
+    <link rel="icon" href="logo.png" type="image/icon type" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif; /* Ensure the font is applied correctly */
+      }
+
+      body {
+        background-color: #ff3131;
+        overflow: hidden;
+      }
+
+      .main {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .page1 {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .page1section1 {
+        display: flex;
+        margin-top: 25px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        z-index: 1;
+      }
+
+      #whitelogo {
+        width: auto;
+        height: 80px;
+      }
+
+      .page1section2 {
+        width: 100%;
+        height: auto;
+        background-color: white;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        border-radius: 30px 30px 0 0; /* Rounded top corners */
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        z-index: 2; /* Ensure it is above the front image */
+      }
+
+      .page1section2inner {
+        width: 95%;
+        height: 50%;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .page1section2inner label {
+        font-size: 16px;
+        color: grey;
+      }
+
+      .page1section2inner input {
+        height: 50px;
+        width: 100%;
+        background-color: #d9d9d9;
+        outline: none;
+        border: none;
+        border-radius: 8px;
+        margin-top: 8px;
+        margin-bottom: 10px;
+        padding: 10px;
+        color: black;
+        font-size: 18px;
+      }
+
+      .page1section2inner p {
+        color: blue;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .page1section2inner button {
+        padding: 15px;
+        font-size: 18px;
+        font-weight: 800;
+        background-color: #ff3131;
+        color: white;
+        border: none;
+        outline: none;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+
+      .slogan {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #team {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      #secondpageimg {
+        background-color: white;
+        border-radius: 50%;
+        width: auto;
+        height: 370px;
+      }
+      /* Responsive Styles */
+      @media (max-width: 600px) {
+        .page1section1 {
+          margin-top: 70px; /* Reduced margin for smaller screens */
+        }
+
+        .page1section2 {
+          top: auto; /* Default position remains bottom */
+          padding: 10px; /* Adjust padding for smaller screens */
+        }
+
+        .page1section2inner button {
+          margin-top: 30px; /* Reduced button margin for smaller screens */
+        }
+      }
+      /* Process indicator with 3 dots */
+      .progress-indicator {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        margin: 0 5px;
+        background-color: grey; /* Default inactive color */
+        border-radius: 50%;
+        display: inline-block;
+        opacity: 0.5; /* Slightly faded for inactive state */
+        transition: background-color 0.3s, opacity 0.3s ease-in-out;
+      }
+
+      /* Active dot styles */
+      #activedot {
+        background-color: red; /* Active dot color */
+        opacity: 1; /* Full opacity for active */
+      }
+
+      /* Animation remains for visual effect */
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(1.3); /* Bounce size increase */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <div class="page1">
+        <div class="page1section1">
+          <img src="whitelogo.png" id="whitelogo" />
+          <!-- Updated slogan -->
+          <p class="slogan">Your Personalized Inventory<br />Assistant</p>
+          <!-- Changed image to secondpageimg.png -->
+          <img src="secondpageimg.png" id="secondpageimg" />
+        </div>
+        <div class="page1section2">
+          <div class="page1section2inner">
+            <!-- Changed label to 'User Name' and input type to 'text' -->
+            <label>User Name</label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              placeholder="Enter your name"
+              required
+            />
+            <p>By logging in you are agreeing to our policies</p>
+            <div class="progress-indicator">
+              <span class="dot"></span>
+              <span class="dot active" id="activedot"></span>
+              <span class="dot"></span>
+            </div>
+            <button id="submitBtn">Next  <i class="fa-solid fa-arrow-right-long"></i></button>
+            <label id="team">Made with ❤️ by TeamInnov4tors</label>
+          </div>
+        </div>
+      </div>
+    </div>
+<!-- 
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then((registration) => {
+              console.log(
+                "Service Worker registered with scope:",
+                registration.scope
+              );
+            })
+            .catch((error) => {
+              console.log("Service Worker registration failed:", error);
+            });
+        });
+      }
+    </script> -->
+    <script src="https://kit.fontawesome.com/5274d0405c.js" crossorigin="anonymous"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
