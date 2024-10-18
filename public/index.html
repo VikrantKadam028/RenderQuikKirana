@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#ff3131" />
+    <title>QuikKirana | Inventory Management & Billing App</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="logo.png" type="image/icon type" />
+  </head>
+  <body>
+    <div class="main">
+      <div class="page1">
+        <div class="page1section1">
+          <img src="whitelogo.png" id="whitelogo" />
+          <p class="slogan">Smart Inventory, Fast Billing</p>
+          <img src="frontpageimg.webp" id="frontpageimg" />
+        </div>
+        <div class="page1section2">
+          <div class="page1section2inner">
+            <label>Phone Number</label>
+            <input
+            type="tel"
+            name="number"
+            id="number"
+            placeholder="Enter your number"
+            value="+91" 
+            required
+            onfocus="this.setSelectionRange(this.value.length, this.value.length);" 
+          />
+            <p>By logging in you are agreeing to our policies</p>
+            <div class="progress-indicator">
+              <span class="dot active"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <button id="submitBtn">Submit</button>
+            <label id="team">Made with ❤️ by TeamInnov4tors</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then((registration) => {
+              console.log(
+                "Service Worker registered with scope:",
+                registration.scope
+              );
+            })
+            .catch((error) => {
+              console.log("Service Worker registration failed:", error);
+            });
+        });
+      }
+    </script>
+    <script src="script.js"></script>
+  </body>
+</html>
