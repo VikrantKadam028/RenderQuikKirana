@@ -1,15 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" href="logo.png" type="image/icon type" />
-  </head>
-  <body>
+    <style>
+      /* Loader styles */
+      #loader {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      }
+      .loader-animation {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+</head>
+<body>
+    <div id="loader">
+      <div class="loader-animation"></div>
+    </div>
     <div class="main">
       <div class="page1">
         <div class="page1section1">
@@ -21,14 +51,14 @@
           <div class="page1section2inner">
             <label>Phone Number</label>
             <input
-            type="tel"
-            name="number"
-            id="number"
-            placeholder="Enter your number"
-            value="+91" 
-            required
-            onfocus="this.setSelectionRange(this.value.length, this.value.length);" 
-          />
+              type="tel"
+              name="number"
+              id="number"
+              placeholder="Enter your number"
+              value="+91"
+              required
+              onfocus="this.setSelectionRange(this.value.length, this.value.length);"
+            />
             <p>By logging in you are agreeing to our policies</p>
             <div class="progress-indicator">
               <span class="dot active"></span>
@@ -48,17 +78,52 @@
           navigator.serviceWorker
             .register("/service-worker.js")
             .then((registration) => {
-              console.log(
-                "Service Worker registered with scope:",
-                registration.scope
-              );
+              console.log("Service Worker registered with scope:", registration.scope);
             })
             .catch((error) => {
               console.log("Service Worker registration failed:", error);
             });
         });
       }
+
+      document.getElementById('submitBtn').addEventListener('click', function(event) {
+        event.preventDefault();
+        const phoneNumber = document.getElementById('number').value;
+
+        if (!phoneNumber || phoneNumber.trim() === "+91") {
+          alert("Please enter a valid phone number.");
+          return;
+        }
+
+        // Show the loader
+        document.getElementById('loader').style.display = 'flex';
+
+        // Send OTP to the server
+        fetch('/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ number: phoneNumber }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Redirect to acceptOTP.html with the phone number
+            setTimeout(() => {
+              window.location.href = `acceptOTP.html?phone=${encodeURIComponent(phoneNumber)}`;
+            }, 2000); // Simulate a 2-second loading time
+          } else {
+            throw new Error(data.message);
+          }
+        })
+        .catch(error => {
+          alert(error.message);
+          // Hide loader if there is an error
+          document.getElementById('loader').style.display = 'none';
+        });
+      });
     </script>
     <script src="script.js"></script>
-  </body>
+</body>
 </html>
