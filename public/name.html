@@ -109,6 +109,7 @@
         outline: none;
         border-radius: 8px;
         margin-top: 20px;
+        cursor: pointer;
       }
 
       .slogan {
@@ -171,7 +172,7 @@
         opacity: 1;
       }
 
-      /* Animation remains for visual effect */
+      /* Bounce effect for visual touch */
       @keyframes bounce {
         0%,
         80%,
@@ -182,15 +183,52 @@
           transform: scale(1.3);
         }
       }
+
+      /* Loader styles */
+      .loader-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        display: none;
+      }
+
+      .loader {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #ff3131;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
+    <div class="loader-container" id="loaderContainer">
+      <div class="loader"></div>
+    </div>
+
     <div class="main">
       <div class="page1">
         <div class="page1section1">
           <img src="whitelogo.png" id="whitelogo" />
           <p class="slogan">Your Personalized Inventory<br />Assistant</p>
-          <img src="images/secondpageimg.png" id="secondpageimg" />
+          <img src="secondpageimg.png" id="secondpageimg" />
         </div>
         <div class="page1section2">
           <div class="page1section2inner">
@@ -216,7 +254,31 @@
         </div>
       </div>
     </div>
-    <script src="https://kit.fontawesome.com/5274d0405c.js" crossorigin="anonymous"></script>
-    <script src="script.js"></script>
+
+    <script
+      src="https://kit.fontawesome.com/5274d0405c.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const submitBtn = document.getElementById("submitBtn");
+      const usernameInput = document.getElementById("username");
+      const loaderContainer = document.getElementById("loaderContainer");
+
+      submitBtn.addEventListener("click", function () {
+        const username = usernameInput.value.trim();
+
+        if (username !== "") {
+          // Show loader
+          loaderContainer.style.display = "flex";
+
+          // Simulate a 3-second delay before redirecting
+          setTimeout(() => {
+            window.location.href = "shopname.html";
+          }, 2500);
+        } else {
+          alert("Please enter your name!");
+        }
+      });
+    </script>
   </body>
 </html>
