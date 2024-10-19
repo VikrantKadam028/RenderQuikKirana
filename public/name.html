@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
     <link rel="icon" href="logo.png" type="image/icon type" />
@@ -129,7 +129,7 @@
         background-color: white;
         border-radius: 50%;
         width: auto;
-        height: 360px;
+        height: 350px;
         z-index: 1;
       }
 
@@ -206,7 +206,7 @@
         border-radius: 50%;
         width: 60px;
         height: 60px;
-        animation: spin 2s linear infinite;
+        animation: spin 1s linear infinite;
       }
 
       @keyframes spin {
@@ -250,16 +250,12 @@
             <button id="submitBtn">
               Next <i class="fa-solid fa-arrow-right-long"></i>
             </button>
-            <label id="team">Made with ❤️ by TeamInnov4tors</label>
           </div>
         </div>
       </div>
     </div>
 
-    <script
-      src="https://kit.fontawesome.com/5274d0405c.js"
-      crossorigin="anonymous"
-    ></script>
+    <script src="https://kit.fontawesome.com/5274d0405c.js" crossorigin="anonymous"></script>
     <script>
       const submitBtn = document.getElementById("submitBtn");
       const usernameInput = document.getElementById("username");
@@ -269,6 +265,9 @@
         const username = usernameInput.value.trim();
 
         if (username !== "") {
+          // Store the username in localStorage
+          localStorage.setItem("username", username);
+
           // Show loader
           loaderContainer.style.display = "flex";
 
