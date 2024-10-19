@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="manifest.json" />
@@ -31,12 +31,16 @@
         animation: spin 2s linear infinite;
       }
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="loader">
       <div class="loader-animation"></div>
     </div>
@@ -78,7 +82,10 @@
           navigator.serviceWorker
             .register("/service-worker.js")
             .then((registration) => {
-              console.log("Service Worker registered with scope:", registration.scope);
+              console.log(
+                "Service Worker registered with scope:",
+                registration.scope
+              );
             })
             .catch((error) => {
               console.log("Service Worker registration failed:", error);
@@ -86,44 +93,53 @@
         });
       }
 
-      document.getElementById('submitBtn').addEventListener('click', function(event) {
-        event.preventDefault();
-        const phoneNumber = document.getElementById('number').value;
+      document
+        .getElementById("submitBtn")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          const phoneNumber = document.getElementById("number").value;
 
-        if (!phoneNumber || phoneNumber.trim() === "+91") {
-          alert("Please enter a valid phone number.");
-          return;
-        }
-
-        // Show the loader
-        document.getElementById('loader').style.display = 'flex';
-
-        // Send OTP to the server
-        fetch('/send-otp', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ number: phoneNumber }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Redirect to acceptOTP.html with the phone number
-            setTimeout(() => {
-              window.location.href = `acceptOTP.html?phone=${encodeURIComponent(phoneNumber)}`;
-            }, 2000); // Simulate a 2-second loading time
-          } else {
-            throw new Error(data.message);
+          if (!phoneNumber || phoneNumber.trim() === "+91") {
+            alert("Please enter a valid phone number.");
+            return;
           }
-        })
-        .catch(error => {
-          alert(error.message);
-          // Hide loader if there is an error
-          document.getElementById('loader').style.display = 'none';
+
+          // Disable the submit button to prevent multiple requests
+          const submitBtn = document.getElementById("submitBtn");
+          submitBtn.disabled = true;
+
+          // Show the loader
+          document.getElementById("loader").style.display = "flex";
+
+          // Send OTP to the server
+          fetch("/send-otp", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ number: phoneNumber }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                // Redirect to acceptOTP.html with the phone number immediately
+                window.location.href = `acceptOTP.html?phone=${encodeURIComponent(
+                  phoneNumber
+                )}`;
+              } else {
+                throw new Error(data.message);
+              }
+            })
+            .catch((error) => {
+              alert(error.message);
+            })
+            .finally(() => {
+              // Hide loader and re-enable the submit button after response
+              document.getElementById("loader").style.display = "none";
+              submitBtn.disabled = false;
+            });
         });
-      });
     </script>
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
