@@ -15,15 +15,16 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Create an in-memory store for OTPs
 const otpStore = {};
+const OTP_EXPIRY_TIME = 2 * 60 * 1000; // 2 minutes in milliseconds
 
 // Middleware to set correct MIME types
 app.use((req, res, next) => {
-  if (req.url.endsWith('.css')) {
-    res.type('text/css');
-  } else if (req.url.endsWith('.js')) {
-    res.type('application/javascript');
-  } else if (req.url.endsWith('.json')) {
-    res.type('application/json');
+  if (req.url.endsWith(".css")) {
+    res.type("text/css");
+  } else if (req.url.endsWith(".js")) {
+    res.type("application/javascript");
+  } else if (req.url.endsWith(".json")) {
+    res.type("application/json");
   }
   next();
 });
@@ -38,9 +39,9 @@ const sendSMS = async (toNumber, body) => {
   const msgOptions = {
     from: process.env.TWILIO_FROM_NUMBER,
     to: toNumber,
-    body: body
+    body: body,
   };
-  
+
   try {
     const message = await client.messages.create(msgOptions);
     console.log("Message sent:", message.sid);
@@ -53,48 +54,81 @@ const sendSMS = async (toNumber, body) => {
 // Endpoint to send OTP
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
-  
+
+  // Validate phone number
   if (!number) {
-    return res.status(400).json({ success: false, message: "Phone number is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Phone number is required" });
   }
-  
+
   // Check if an OTP has already been sent to this number
-  if (otpStore[number]) {
-    return res.status(400).json({ success: false, message: "An OTP has been send to your number." });
+  if (
+    otpStore[number] &&
+    Date.now() - otpStore[number].timestamp < OTP_EXPIRY_TIME
+  ) {
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "An OTP has already been sent to your number.",
+      });
   }
-  
+
   try {
     const otp = generateOTP();
     console.log("Generated OTP for", number, ":", otp);
-    
-    // Store the OTP in the otpStore
-    otpStore[number] = otp;
-    
+
+    // Store the OTP in the otpStore with a timestamp
+    otpStore[number] = { otp, timestamp: Date.now() };
+
     await sendSMS(number, `Your OTP is: ${otp}`);
     res.status(200).json({ success: true, message: "OTP sent successfully!" });
   } catch (error) {
     console.error("Error in /send-otp route:", error.message);
-    res.status(500).json({ success: false, message: error.message || "Failed to send OTP" });
+    res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 });
 
-// Endpoint to verify OTP
 app.post("/verify-otp", async (req, res) => {
   const { number, otp } = req.body;
-  
   console.log("Verifying OTP:", number, otp);
   console.log("OTP Store:", otpStore);
-  
-  // Check if the number and OTP match
-  if (otpStore[number] && otpStore[number] === otp) {
-    // OTP is correct
-    delete otpStore[number]; // Clean up the OTP after successful verification
-    return res.status(200).json({ success: true, message: "OTP verified successfully!" });
+  if (otpStore[number] && otpStore[number].otp === otp) {
+    if (Date.now() - otpStore[number].timestamp < OTP_EXPIRY_TIME) {
+      delete otpStore[number]; 
+      return res
+        .status(200)
+        .json({ success: true, message: "OTP verified successfully!" });
+    } else {
+      delete otpStore[number]; 
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "OTP has expired. Please request a new one.",
+        });
+    }
   } else {
-    // Invalid OTP
     console.warn(`Invalid OTP attempt for ${number}: ${otp}`);
     return res.status(400).json({ success: false, message: "Invalid OTP" });
   }
+});
+
+// Endpoint to reset OTP
+app.post("/reset-otp", (req, res) => {
+  const { number } = req.body;
+
+  if (otpStore[number]) {
+    delete otpStore[number]; // Remove the existing OTP
+  }
+
+  res
+    .status(200)
+    .json({
+      success: true,
+      message: "OTP has been reset. Please request a new one.",
+    });
 });
 
 // Serve the index.html for any other routes
