@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
     <link rel="icon" href="logo.png" type="image/icon type" />
-    <!-- <link rel="stylesheet" href="style.css" />  -->
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
 
@@ -18,7 +20,6 @@
       }
 
       body {
-        /* background-color: #ff3131; */
         background-color: white;
         overflow: hidden;
       }
@@ -42,7 +43,7 @@
 
       .page1section1 {
         display: flex;
-        margin-top: 25px;
+        margin-top: 45px;
         align-items: center;
         justify-content: center;
         flex-direction: column;
@@ -52,6 +53,59 @@
       #whitelogo {
         width: auto;
         height: 80px;
+      }
+
+      .profile-picture-uploader {
+        position: relative;
+        width: 250px; /* Adjusted width */
+        height: 250px; /* Adjusted height */
+        border-radius: 50%;
+        overflow: hidden;
+        cursor: pointer;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .profile-picture-uploader img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+      }
+
+      .profile-picture-uploader img.active {
+        display: block;
+      }
+
+      .upload-text {
+        font-size: 18px;
+        color: #777;
+        text-align: center;
+        position: absolute;
+        pointer-events: none;
+        z-index: 10; /* Ensure text stays on top */
+      }
+
+      .plus-icon {
+        position: absolute;
+        bottom: 65px; /* Adjusted positioning */
+        right: 15px; /* Adjusted positioning */
+        background-color: #ff3131;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px; /* Increased font size */
+        border: 3px solid white;
+        z-index: 20; /* Ensure icon is on top */
       }
 
       .page1section2 {
@@ -111,35 +165,35 @@
         outline: none;
         border-radius: 8px;
         margin-top: 20px;
+        cursor: pointer;
       }
 
       .slogan {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
         color: black;
         text-align: center;
         margin-bottom: 20px;
       }
 
-      #team {
-        text-align: center;
-        margin-top: 20px;
-      }
-
-      #secondpageimg {
-        width: auto;
-        height: 350px;
-        z-index: 1;
-      }
-
       /* Responsive Styles */
       @media (max-width: 600px) {
-        .page1section1 {
-          margin-top: 70px;
+        .profile-picture-uploader {
+          width: 310px;
+          height: 310px;
+          position: absolute;
+          top: 40%; /* Move to 50% from the top */
+          left: 50%; /* Move to 50% from the left */
+          transform: translate(-50%, -50%);
+        }
+
+        .plus-icon {
+          width: 30px;
+          height: 30px;
+          font-size: 20px; /* Adjusted font size */
         }
 
         .page1section2 {
-          top: auto;
           padding: 10px;
         }
 
@@ -167,11 +221,6 @@
       }
 
       /* Active dot styles */
-      #activedot {
-        background-color: white;
-        opacity: 1;
-      }
-
       #thirdactivedot {
         background-color: white;
         opacity: 1;
@@ -195,10 +244,27 @@
       <div class="page1">
         <div class="page1section1">
           <img src="img2.png" id="whitelogo" />
-          <p class="slogan">
-            Your Shop, Your Rules<br />Manage it Effortlessly!
-          </p>
-          <img src="images/thirdpageimg.png" id="secondpageimg" />
+          <p class="slogan" id="greeting"></p>
+
+          <!-- Profile Picture Uploader -->
+          <div
+            class="profile-picture-uploader"
+            onclick="document.getElementById('fileInput').click();"
+          >
+            <p class="upload-text" id="uploadText">Upload a profile picture</p>
+            <img
+              src="placeholder.jpg"
+              id="profilePicture"
+              alt="Profile Picture"
+            />
+            <div class="plus-icon">+</div>
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            style="display: none"
+            accept="image/*"
+          />
         </div>
         <div class="page1section2">
           <div class="page1section2inner">
@@ -219,7 +285,6 @@
             <button id="submitBtn">
               Next <i class="fa-solid fa-arrow-right-long"></i>
             </button>
-            <label id="team">Made with ❤️ by TeamInnov4tors</label>
           </div>
         </div>
       </div>
@@ -228,5 +293,51 @@
       src="https://kit.fontawesome.com/5274d0405c.js"
       crossorigin="anonymous"
     ></script>
+    <script>
+      // Retrieve the username from localStorage
+      const username = localStorage.getItem("username");
+      const greetingElement = document.getElementById("greeting");
+
+      if (username) {
+        greetingElement.innerHTML = `Hello, ${username}! 👋`;
+      }
+
+      const submitBtn = document.getElementById("submitBtn");
+      const shopnameInput = document.getElementById("shopname");
+
+      submitBtn.addEventListener("click", function () {
+        const shopname = shopnameInput.value.trim();
+
+        if (shopname !== "") {
+          // Store the shop name in localStorage
+          localStorage.setItem("shopname", shopname);
+
+          // Here you can add logic to handle the shop name submission
+          alert(`Shop name "${shopname}" submitted!`);
+        } else {
+          alert("Please enter a shop name.");
+        }
+      });
+
+      const fileInput = document.getElementById("fileInput");
+      const profilePicture = document.getElementById("profilePicture");
+      const uploadText = document.getElementById("uploadText");
+
+      fileInput.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (file) {
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            profilePicture.src = e.target.result;
+            profilePicture.classList.add("active");
+            uploadText.style.display = "none"; // Hide the upload text
+          };
+
+          reader.readAsDataURL(file);
+        }
+      });
+    </script>
   </body>
 </html>
