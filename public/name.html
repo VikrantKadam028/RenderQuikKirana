@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
     <link rel="icon" href="logo.png" type="image/icon type" />
@@ -23,7 +26,7 @@
 
       .main {
         width: 100vw;
-        height: 100vh;
+        min-height: 100vh; /* Changed from height to min-height */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -57,8 +60,8 @@
         width: 100%;
         height: auto;
         background-color: white;
-        position: absolute;
-        bottom: 0;
+        position: relative; /* Changed from absolute to relative */
+        margin-top: auto; /* Use margin to position it */
         left: 0;
         border-radius: 30px 30px 0 0;
         padding: 20px;
@@ -137,14 +140,13 @@
       /* Responsive Styles */
       @media (max-width: 600px) {
         .page1section1 {
-          margin-top: 70px;
+          margin-top: 70px; /* Adjust as needed */
         }
 
         .page1section2 {
-          top: auto;
-          margin-top: auto;
+          margin-top: 0; /* Ensure it’s not pushing down */
           padding: 10px;
-          z-index:999;
+          z-index: 999;
         }
 
         .page1section2inner button {
@@ -258,7 +260,10 @@
       </div>
     </div>
 
-    <script src="https://kit.fontawesome.com/5274d0405c.js" crossorigin="anonymous"></script>
+    <script
+      src="https://kit.fontawesome.com/5274d0405c.js"
+      crossorigin="anonymous"
+    ></script>
     <script>
       const submitBtn = document.getElementById("submitBtn");
       const usernameInput = document.getElementById("username");
