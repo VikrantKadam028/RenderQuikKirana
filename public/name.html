@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
     />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
@@ -26,7 +26,7 @@
 
       .main {
         width: 100vw;
-        min-height: 100vh; /* Changed from height to min-height */
+        height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -60,8 +60,8 @@
         width: 100%;
         height: auto;
         background-color: white;
-        position: relative; /* Changed from absolute to relative */
-        margin-top: auto; /* Use margin to position it */
+        position: absolute;
+        bottom: 0;
         left: 0;
         border-radius: 30px 30px 0 0;
         padding: 20px;
@@ -140,11 +140,12 @@
       /* Responsive Styles */
       @media (max-width: 600px) {
         .page1section1 {
-          margin-top: 70px; /* Adjust as needed */
+          margin-top: 70px;
         }
 
         .page1section2 {
-          margin-top: 0; /* Ensure it’s not pushing down */
+          top: auto;
+          margin-top: auto;
           padding: 10px;
           z-index: 999;
         }
