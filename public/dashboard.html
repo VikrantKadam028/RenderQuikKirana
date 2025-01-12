@@ -1,342 +1,370 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuikKiran | Dashboard</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>QuikKirana | Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-        html, body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f9fafc;
-            color: #2c3e50;
-            height: 100%;
-        }
+      html,
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f9fafc;
+        color: #2c3e50;
+        height: 100%;
+        outline: none;
+        -webkit-tap-highlight-color: transparent; /* For iOS Safari and other WebKit browsers */
+        -webkit-user-select: none;
+      }
 
-        .container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #ffffff;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-        }
+      .container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background-color: #ffffff;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      }
 
-        .header {
-            background: linear-gradient(90deg, #1a73e8, #4285f4);
-            padding: 1.5rem 1.5rem;
-            padding-top: 2rem;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            border-bottom-left-radius: 25px;
-            border-bottom-right-radius: 25px;
-        }
+      .header {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        padding: 1.5rem 1.5rem;
+        padding-top: 2rem;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        border-bottom-left-radius: 25px;
+        border-bottom-right-radius: 25px;
+      }
 
-        .header img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+      .header img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
 
+      .header h1 {
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .header p {
+        margin: 0;
+        font-size: 1rem;
+        color: #dce3f0;
+      }
+
+      .button {
+        padding: 2.5rem;
+        margin: 0.5rem 1rem;
+        border-radius: 0.825rem;
+        text-align: center;
+        font-size: 1.6rem;
+        margin-top: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        gap: 0.5rem;
+        transition: background-color 0.3s;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #ffffff;
+      }
+
+      .button:hover {
+        background-color: #005bb5;
+      }
+
+      .button i {
+        font-size: 3rem;
+      }
+
+      .add-products {
+        padding: 1.2rem;
+        margin: 0.5rem 1rem;
+        border-radius: 50px;
+        text-align: center;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: background-color 0.3s;
+        border: none;
+        cursor: pointer;
+        background-color: #ffffff;
+        color: grey;
+        border: 2px solid black;
+      }
+
+      .add-products:hover {
+        background-color: #f0f6ff;
+      }
+
+      .order {
+        background-color: #f5f5f5;
+        padding: 1rem 2rem;
+        border-radius: 0.625rem;
+        margin: 0.8rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .order p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: #333;
+      }
+
+      .order i {
+        color: #e74c3c;
+        cursor: pointer;
+      }
+
+      .menu {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        padding: 1rem;
+        margin: 0 auto;
+        width: 90%;
+      }
+
+      .menu div {
+        text-align: center;
+        height: 120px;
+        font-size: 0.875rem;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .menu div:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .menu i {
+        font-size: 1.9rem;
+        color: #1a73e8;
+        margin-bottom: 0.5rem;
+      }
+
+      .menu p {
+        margin: 0.5rem 0 0;
+        font-size: 1rem;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-around;
+        padding: 0.8rem 0;
+        color: white;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        border-top-left-radius: 30px;
+        border-top-right-radius: 30px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .fa-home:before {
+        color: white;
+      }
+      .fa-users:before {
+        color: white;
+      }
+      .fa-cog:before {
+        color: white;
+      }
+      .fa-clipboard-list:before {
+        color: grey;
+      }
+      .fa-store:before {
+        color: grey;
+      }
+      .fa-chart-line:before {
+        color: grey;
+      }
+      .fa-file-invoice:before {
+        color: grey;
+      }
+
+      .footer div {
+        text-align: center;
+        font-size: 0.875rem;
+        color: white;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+
+      .footer div:hover {
+        color: #1a73e8;
+      }
+
+      .footer i {
+        font-size: 1.7rem;
+        color: #1a73e8;
+      }
+
+      .footer p {
+        margin: 0.35rem 0 0;
+      }
+
+      @media (max-width: 400px) {
         .header h1 {
-            font-size: 1.3rem;
-            font-weight: 600;
+          font-size: 1.2rem;
         }
-
-        .header p {
-            margin: 0;
-            font-size: 1.0rem;
-            color: #dce3f0;
-        }
-
-        .button {
-            padding: 2.5rem;
-            margin: 0.5rem 1rem;
-            border-radius: 0.825rem;
-            text-align: center;
-            font-size: 1.6rem;
-            margin-top: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-evenly;
-            gap: 0.5rem;
-            transition: background-color 0.3s;
-            border: none;
-            cursor: pointer;
-            background-color: #1a73e8;
-            color: #ffffff;
-        }
-
-        .button:hover {
-            background-color: #005bb5;
-        }
-
         .button i {
-            font-size: 3rem;
+          font-size: 2.5rem;
         }
-
         .add-products {
-            padding: 1.2rem;
-            margin: 0.5rem 1rem;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: background-color 0.3s;
-            border: none;
-            cursor: pointer;
-            background-color: #ffffff;
-            color: #1a73e8;
-            border: 2px solid #1a73e8;
+          font-size: 1.2rem;
         }
-
-        .add-products:hover {
-            background-color: #f0f6ff;
+        .button {
+          font-size: 1.3rem;
         }
-
-        .order {
-            background-color: #f5f5f5;
-            padding: 1rem 2rem;
-            border-radius: 0.625rem;
-            margin: 0.8rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
         .order p {
-            margin: 0;
-            font-size: 0.875rem;
-            color: #333;
+          font-size: 0.8rem;
         }
-
-        .order i {
-            color: #e74c3c;
-            cursor: pointer;
-        }
-
         .menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            padding: 1rem;
-            margin: 0 auto;
-            width: 90%;
+          grid-template-columns: 1fr 1fr;
         }
-
-        .menu div {
-            text-align: center;
-            height: 120px;
-            font-size: 0.875rem;
-            color: #2c3e50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            background-color: #ffffff;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .menu div:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .menu i {
-            font-size: 1.9rem;
-            color: #1a73e8;
-            margin-bottom: 0.5rem;
-        }
-
-        .menu p {
-            margin: 0.5rem 0 0;
-            font-size: 1rem;
-        }
-
-        .footer {
-            display: flex;
-            justify-content: space-around;
-            padding: 0.8rem 0;
-            background-color: #e0e0e0;
-            border-top-left-radius: 30px;
-            border-top-right-radius: 30px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-
-        .footer div {
-            text-align: center;
-            font-size: 0.875rem;
-            color: #2c3e50;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .footer div:hover {
-            color: #1a73e8;
-        }
-
-        .footer i {
-            font-size: 1.7rem;
-            color: #1a73e8;
-        }
-
-        .footer p {
-            margin: 0.35rem 0 0;
-        }
-
-        @media (max-width: 400px) {
-            .header h1 {
-                font-size: 1.2rem;
-            }
-            .button i {
-                font-size: 2.5rem;
-            }
-            .add-products {
-                font-size: 1.2rem;
-            }
-            .button {
-                font-size: 1.3rem;
-            }
-            .order p {
-                font-size: 0.8rem;
-            }
-            .menu {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <img id="storeImage" src="placeholder.jpg" alt="Store Logo">
-            <div>
-                <h1 id="storeName">Loading...</h1>
-                <p>Hello, <span id="userName">User</span> 👋</p>
-            </div>
+      <div class="header">
+        <img id="storeImage" src="placeholder.jpg" alt="Store Logo" />
+        <div>
+          <h1 id="storeName">Loading...</h1>
+          <p>Hello, <span id="userName">User</span> 👋</p>
         </div>
+      </div>
 
-        <div class="button">
-            <span>Add New Bill<br>( नया बिल )</span>
-            <i class="fas fa-shopping-cart"></i>
-        </div>
+      <div class="button">
+        <span>Add New Bill<br />( नया बिल )</span>
+        <i class="fas fa-shopping-cart"></i>
+      </div>
 
-        <div class="add-products">
-            <span>Add New Products</span>
-            <i class="fas fa-plus-circle"></i>
-        </div>
+      <div class="add-products">
+        <span>Add New Products</span>
+        <i class="fas fa-plus-circle"></i>
+      </div>
 
-        <div class="order">
-            <div>
-                <p><strong>New Order #1</strong></p>
-                <p>from: Pandhurang Patil</p>
-            </div>
-            <i class="fas fa-trash-alt"></i>
+      <div class="order">
+        <div>
+          <p><strong>New Order #1</strong></p>
+          <p>from: Pandhurang Patil</p>
         </div>
+        <i class="fas fa-trash-alt"></i>
+      </div>
 
-        <div class="menu">
-            <div>
-                <i class="fas fa-store"></i>
-                <p>My Stock</p>
-            </div>
-            <div>
-                <i class="fas fa-clipboard-list"></i>
-                <p>Low Stocks</p>
-            </div>
-            <div>
-                <i class="fas fa-chart-line"></i>
-                <p>Profit Analysis</p>
-            </div>
-            <div>
-                <i class="fas fa-file-invoice"></i>
-                <p>Last Bills</p>
-            </div>
+      <div class="menu">
+        <div>
+          <i class="fas fa-store"></i>
+          <p>My Stock</p>
         </div>
+        <div>
+          <i class="fas fa-clipboard-list"></i>
+          <p>Low Stocks</p>
+        </div>
+        <div>
+          <i class="fas fa-chart-line"></i>
+          <p>Profit Analysis</p>
+        </div>
+        <div>
+          <i class="fas fa-file-invoice"></i>
+          <p>Last Bills</p>
+        </div>
+      </div>
 
-        <div class="footer">
-            <div>
-                <i class="fas fa-home"></i>
-                <p>Home</p>
-            </div>
-            <div>
-                <i class="fas fa-users"></i>
-                <p>Customers</p>
-            </div>
-            <div>
-                <i class="fas fa-cog"></i>
-                <p>Settings</p>
-            </div>
+      <div class="footer">
+        <div>
+          <i class="fas fa-home"></i>
+          <p>Home</p>
         </div>
+        <div>
+          <i class="fas fa-users"></i>
+          <p>Customers</p>
+        </div>
+        <div>
+          <i class="fas fa-cog"></i>
+          <p>Settings</p>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Load stored data when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get and set the shop name
-            const shopName = localStorage.getItem("shopname");
-            if (shopName) {
-                document.getElementById("storeName").textContent = shopName;
-            }
+      document.addEventListener("DOMContentLoaded", function () {
+        const shopName = localStorage.getItem("shopname");
+        if (shopName) {
+          document.getElementById("storeName").textContent = shopName;
+        }
+        const profileImage = localStorage.getItem("profileImage");
+        if (profileImage) {
+          document.getElementById("storeImage").src = profileImage;
+        }
 
-            // Get and set the profile image
-            const profileImage = localStorage.getItem("profileImage");
-            if (profileImage) {
-                document.getElementById("storeImage").src = profileImage;
-            }
+        const username = localStorage.getItem("username");
+        if (username) {
+          document.getElementById("userName").textContent = username;
+        }
+      });
 
-            // Get and set the username
-            const username = localStorage.getItem("username");
-            if (username) {
-                document.getElementById("userName").textContent = username;
-            }
+      document.querySelectorAll(".menu div").forEach((item) => {
+        item.addEventListener("click", function () {
+          const feature = this.querySelector("p").textContent;
+          console.log(`Clicked on ${feature}`);
+        });
+      });
+
+      document
+        .querySelector(".order .fa-trash-alt")
+        .addEventListener("click", function () {
+          const orderElement = this.closest(".order");
+          if (confirm("Are you sure you want to delete this order?")) {
+            orderElement.remove();
+          }
         });
 
-        // Add click handlers for menu items
-        document.querySelectorAll('.menu div').forEach(item => {
-            item.addEventListener('click', function() {
-                const feature = this.querySelector('p').textContent;
-                console.log(`Clicked on ${feature}`);
-                // Add your navigation or feature handling code here
-            });
-        });
+      document.querySelector(".button").addEventListener("click", function () {
+        console.log("New Bill button clicked");
+      });
 
-        // Handle order deletion
-        document.querySelector('.order .fa-trash-alt').addEventListener('click', function() {
-            const orderElement = this.closest('.order');
-            if (confirm('Are you sure you want to delete this order?')) {
-                orderElement.remove();
-            }
-        });
-
-        // Handle new bill button
-        document.querySelector('.button').addEventListener('click', function() {
-            console.log('New Bill button clicked');
-            // Add your new bill handling code here
-        });
-
-        // Handle add products button
-        document.querySelector('.add-products').addEventListener('click', function() {
-            console.log('Add Products button clicked');
-            // Add your product addition handling code here
+      document
+        .querySelector(".add-products")
+        .addEventListener("click", function () {
+          console.log("Add Products button clicked");
         });
     </script>
-</body>
+  </body>
 </html>
