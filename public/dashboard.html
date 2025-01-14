@@ -152,7 +152,7 @@
 
       .menu div {
         text-align: center;
-        height: 120px;
+        height: 100px;
         font-size: 0.875rem;
         color: #2c3e50;
         display: flex;
@@ -258,6 +258,35 @@
           grid-template-columns: 1fr 1fr;
         }
       }
+      .order.permanent-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 600px;
+        margin: 10px auto;
+      }
+
+      .text-content {
+        flex: 1;
+      }
+
+      .text-content p {
+        margin: 0;
+        line-height: 1.5;
+        color: #333;
+      }
+
+      .image-content img {
+        width: 50px;
+        height: auto;
+        border-radius: 5px;
+      }
     </style>
   </head>
   <body>
@@ -275,17 +304,33 @@
         <i class="fas fa-shopping-cart"></i>
       </div>
 
-      <div class="add-products" onclick="window.location.href='add-product.html'">
+      <div
+        class="add-products"
+        onclick="window.location.href='add-product.html'"
+      >
         <span>Add New Products</span>
         <i class="fas fa-plus-circle"></i>
       </div>
 
-      <div class="order">
+      <!-- <div class="order">
         <div>
           <p><strong>New Order #1</strong></p>
           <p>from: Pandhurang Patil</p>
         </div>
         <i class="fas fa-trash-alt"></i>
+      </div> -->
+
+      <div class="order permanent-box">
+        <div class="text-content">
+          <p><strong>Setup Your Online Store</strong></p>
+          <p>Start managing your orders online with ease!</p>
+        </div>
+        <div class="image-content">
+          <img
+            src="https://media.istockphoto.com/id/467970412/vector/groceries.jpg?s=612x612&w=0&k=20&c=tH30XMv3C-OnoxGIvN3sWmjbmtbdOJMuffd_dR9L5Z8="
+            alt="Snacks"
+          />
+        </div>
       </div>
 
       <div class="menu">
