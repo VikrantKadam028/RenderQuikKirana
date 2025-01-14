@@ -677,7 +677,7 @@
   </head>
   <body>
     <div class="main">
-      <button class="back-button">
+      <button class="back-button" onclick="window.location.href='dashboard.html'">
         <i class="fa-solid fa-arrow-left"></i>
       </button>
       <div class="top-box">
@@ -731,7 +731,7 @@
       <div class="bottom-bar">
         <button class="quick-add">Quick Add</button>
         <div class="total-container">
-          <button class="create-bill">
+          <button class="create-bill" onclick="handleButtonClick()">
             <span>Total (₹0.00)</span><br />Create Bill
             <i class="fas fa-arrow-right"></i>
           </button>
@@ -740,10 +740,49 @@
 
       <div class="search-bar">
         <input type="text" placeholder="Search by name or barcode" />
-        <button class="scan-button">Seach</button>
+        <button class="scan-button">Search</button>
       </div>
     </div>
     <script>
+      function storeTotal() {
+        // Select the second <p> element within the .right-box div
+        const totalAmountElement = document.querySelector(
+          ".right-box p:nth-of-type(2)"
+        );
+        if (!totalAmountElement) {
+          console.error("Error: .right-box p:nth-of-type(2) not found.");
+          return;
+        }
+
+        // Extract the text content of the second <p>
+        const totalAmountText = totalAmountElement.textContent.trim(); // Example: "₹0.0"
+        console.log(`Extracted text: "${totalAmountText}"`); // Debugging the extracted text
+
+        // Extract the numeric value from the text
+        const match = totalAmountText.match(/₹([\d.,]+)/); // Look for "₹" followed by numbers
+        if (match) {
+          const totalAmount = parseFloat(match[1].replace(/,/g, "")); // Convert to a number
+          if (!isNaN(totalAmount)) {
+            // Store the total amount in localStorage
+            localStorage.setItem("totalAmount", totalAmount);
+            console.log(
+              `Total amount (${totalAmount}) successfully stored in localStorage.`
+            );
+          } else {
+            console.error("Error: Extracted value is not a valid number.");
+          }
+        } else {
+          console.error(
+            "Error: Could not parse a valid total amount from the text."
+          );
+        }
+      }
+
+      function handleButtonClick() {
+        storeTotal();
+        // Redirect to the payment page
+        window.location.href = "payment.html";
+      }
       // Product database
       const products = {
         8902519010124: {
