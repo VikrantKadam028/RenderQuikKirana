@@ -2,14 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="icon" href="logo.png" type="image/icon type" />
+    <link rel="icon" href="faviconlogo.png" type="image/icon type" />
     <style>
-      /* Loader styles */
       #loader {
         display: none;
         position: fixed;
@@ -24,7 +26,7 @@
       }
       .loader-animation {
         border: 16px solid #f3f3f3;
-        border-top: 16px solid #3498db;
+        border-top: 16px solid #ff3131;
         border-radius: 50%;
         width: 60px;
         height: 60px;
@@ -53,34 +55,56 @@
         </div>
         <div class="page1section2">
           <div class="page1section2inner">
-            <label>Phone Number</label>
-            <input
-              type="tel"
-              name="number"
-              id="number"
-              placeholder="Enter your number"
-              value="+91"
-              required
-              onfocus="this.setSelectionRange(this.value.length, this.value.length);"
-            />
-            <p>By logging in you are agreeing to our policies</p>
-            <div class="progress-indicator">
-              <span class="dot active"></span>
-              <span class="dot"></span>
-              <span class="dot"></span>
-            </div>
-            <button id="submitBtn">Submit</button>
+            <form action="store_no.php" method="POST">
+              <label>Phone Number</label>
+              <input
+                type="tel"
+                name="number"
+                id="number"
+                placeholder="Enter your number"
+                value="+91"
+                required
+                onfocus="this.setSelectionRange(this.value.length, this.value.length);"
+              />
+              <p>By logging in you are agreeing to our policies</p>
+              <div class="progress-indicator">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+              <button type="submit" id="submitBtn" style="width: 100%">
+                Submit
+              </button>
+            </form>
             <label id="team">Made with ❤️ by TeamInnov4tors</label>
           </div>
         </div>
       </div>
     </div>
-
     <script>
+      // if ("serviceWorker" in navigator) {
+      //   window.addEventListener("load", () => {
+      //     navigator.serviceWorker
+      //       .register("/service-worker.js")
+      //       .then((registration) => {
+      //         console.log(
+      //           "Service Worker registered with scope:",
+      //           registration.scope
+      //         );
+      //       })
+      //       .catch((error) => {
+      //         console.log("Service Worker registration failed:", error);
+      //       });
+      //   });
+      // }
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
+          // Get the base path from window.location
+          const basePath = window.location.pathname.replace(/\/[^/]*$/, "");
+          const swPath = `${basePath}/service-worker.js`;
+
           navigator.serviceWorker
-            .register("/service-worker.js")
+            .register(swPath)
             .then((registration) => {
               console.log(
                 "Service Worker registered with scope:",
@@ -88,57 +112,10 @@
               );
             })
             .catch((error) => {
-              console.log("Service Worker registration failed:", error);
+              console.error("Service Worker registration failed:", error);
             });
         });
       }
-
-      document
-        .getElementById("submitBtn")
-        .addEventListener("click", function (event) {
-          event.preventDefault();
-          const phoneNumber = document.getElementById("number").value;
-
-          if (!phoneNumber || phoneNumber.trim() === "+91") {
-            alert("Please enter a valid phone number.");
-            return;
-          }
-
-          // Disable the submit button to prevent multiple requests
-          const submitBtn = document.getElementById("submitBtn");
-          submitBtn.disabled = true;
-
-          // Show the loader
-          document.getElementById("loader").style.display = "flex";
-
-          // Send OTP to the server
-          fetch("/send-otp", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ number: phoneNumber }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                // Redirect to acceptOTP.html with the phone number immediately
-                window.location.href = `acceptOTP.html?phone=${encodeURIComponent(
-                  phoneNumber
-                )}`;
-              } else {
-                throw new Error(data.message);
-              }
-            })
-            .catch((error) => {
-              alert(error.message);
-            })
-            .finally(() => {
-              // Hide loader and re-enable the submit button after response
-              document.getElementById("loader").style.display = "none";
-              submitBtn.disabled = false;
-            });
-        });
     </script>
     <script src="script.js"></script>
   </body>
