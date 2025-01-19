@@ -113,7 +113,7 @@
 
           document.getElementById("loader").style.display = "flex";
 
-          fetch("http://localhost:3000/send-otp", {
+          fetch("/send-otp", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
