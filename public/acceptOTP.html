@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | OTP Verification</title>
@@ -66,8 +69,8 @@
         font-size: 24px;
         text-align: center;
         transition: border-color 0.3s;
-        -webkit-appearance: none; /* Disable autocomplete on iOS */
-        -moz-appearance: textfield; /* Disable autocomplete on Firefox */
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
       }
       input:focus {
         border-color: #ff3131;
@@ -155,15 +158,13 @@
     </div>
 
     <script>
-      // Get phone number from URL
       const urlParams = new URLSearchParams(window.location.search);
       const phoneNumber = urlParams.get("phone");
 
-      let timeRemaining = 120; // 2 minutes in seconds
+      let timeRemaining = 120;
       const timerDisplay = document.getElementById("timeRemaining");
       const messageDisplay = document.getElementById("message");
 
-      // Start the timer for OTP validity
       const startTimer = () => {
         const interval = setInterval(() => {
           if (timeRemaining > 0) {
@@ -173,14 +174,13 @@
             clearInterval(interval);
             messageDisplay.textContent = "OTP expired.";
             messageDisplay.classList.add("error");
-            document.getElementById("verifyBtn").disabled = true; // Disable the verify button
+            document.getElementById("verifyBtn").disabled = true;
           }
         }, 1000);
       };
 
       startTimer();
 
-      // Function to move to the next input
       function moveToNextInput(currentInput) {
         if (currentInput.value.length === 1) {
           const nextInput = currentInput.nextElementSibling;
@@ -190,13 +190,12 @@
         }
       }
 
-      // OTP input fields handling
       const otpInputs = document.querySelectorAll(".otp-inputs input");
 
       otpInputs.forEach((input) => {
         input.addEventListener("input", function () {
           if (this.value.match(/[^0-9]/)) {
-            this.value = ""; // Remove any non-digit character
+            this.value = "";
           }
           moveToNextInput(this);
         });
@@ -211,7 +210,6 @@
         });
       });
 
-      // OTP verification functionality
       document
         .getElementById("verifyBtn")
         .addEventListener("click", function () {
@@ -228,10 +226,8 @@
             return;
           }
 
-          // Show the loader
           document.getElementById("loader").style.display = "block";
 
-          // Verify OTP with the server
           fetch("/verify-otp", {
             method: "POST",
             headers: {
@@ -244,10 +240,10 @@
               if (data.success) {
                 messageDisplay.textContent = "OTP verified successfully!";
                 messageDisplay.classList.add("success");
-                // Redirect to name.html after successful verification
+
                 setTimeout(() => {
-                  window.location.href = "name.html";
-                }, 2000); // Redirect after 2 seconds for better UX
+                  window.location.href = "name_shopname.html";
+                }, 2000);
               } else {
                 throw new Error(data.message);
               }
@@ -257,17 +253,15 @@
               messageDisplay.classList.add("error");
             })
             .finally(() => {
-              // Hide loader
               document.getElementById("loader").style.display = "none";
             });
         });
 
-      // Resend OTP functionality
       document
         .getElementById("resendBtn")
         .addEventListener("click", function (event) {
           event.preventDefault();
-          // Send OTP to the server again
+
           fetch("/send-otp", {
             method: "POST",
             headers: {
@@ -282,13 +276,10 @@
                   "OTP resent. Please check your phone.";
                 messageDisplay.classList.remove("error");
                 messageDisplay.classList.add("success");
-                timeRemaining = 120; // Reset timer to 2 minutes
+                timeRemaining = 120;
                 timerDisplay.textContent = timeRemaining;
 
-                // Enable the verify button
                 document.getElementById("verifyBtn").disabled = false;
-
-                // Restart the timer
                 startTimer();
               } else {
                 throw new Error(data.message);
