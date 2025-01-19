@@ -11,13 +11,8 @@ updateActiveDot(0);
 document.getElementById("submitBtn").addEventListener("click", async () => {
   const phoneNumber = document.getElementById("number").value;
 
-  if (!phoneNumber.startsWith("+91") || phoneNumber.length !== 13) {
-    alert("Please enter a valid phone number with +91.");
-    return;
-  }
-
   try {
-    const response = await fetch("/send-otp", {
+    const response = await fetch("http://localhost:3000/send-otp", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -28,6 +23,10 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
     const data = await response.json();
     if (data.success) {
       alert("OTP sent successfully!");
+
+      window.location.href = `acceptOTP.html?phone=${encodeURIComponent(
+        phoneNumber
+      )}`;
     } else {
       alert("Failed to send OTP: " + data.message);
     }
