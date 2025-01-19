@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ff3131" />
+    <title>QuikKirana | OTP Verification</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="logo.png" type="image/icon type" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .otp-container {
+        background-color: white;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 400px;
+      }
+      #message {
+        color: #343a40;
+        margin-top: 10px;
+        font-size: 14px;
+      }
+      #message.error {
+        color: red;
+      }
+      #message.success {
+        color: green;
+      }
+      .slogan {
+        font-size: 20px;
+        color: #343a40;
+        margin-bottom: 10px;
+      }
+      .otp-inputs {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .otp-container img {
+        width: auto;
+        height: 60px;
+      }
+      input {
+        width: 55px;
+        padding: 15px;
+        margin: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        font-size: 24px;
+        text-align: center;
+        transition: border-color 0.3s;
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+      }
+      input:focus {
+        border-color: #ff3131;
+        outline: none;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 18px;
+        background-color: #ff3131;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #d62828;
+      }
+      #loader {
+        display: none;
+        margin-top: 20px;
+      }
+      #timer {
+        font-size: 16px;
+        margin-top: 10px;
+        color: #343a40;
+      }
+      .resend-otp {
+        margin-top: 20px;
+      }
+      .resend-otp a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .resend-otp a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="otp-container">
+      <img src="img2.png" />
+      <p class="slogan">Secure Your Login with OTP</p>
+      <label for="otp">Enter the OTP sent to your phone</label>
+      <div class="otp-inputs">
+        <input
+          type="text"
+          maxlength="1"
+          id="otp1"
+          required
+          autocomplete="off"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp2"
+          required
+          autocomplete="off"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp3"
+          required
+          autocomplete="off"
+        />
+        <input
+          type="text"
+          maxlength="1"
+          id="otp4"
+          required
+          autocomplete="off"
+        />
+      </div>
+      <button id="verifyBtn">Verify OTP</button>
+      <p id="message"></p>
+      <p id="timer">
+        OTP Valid for: <span id="timeRemaining">120</span> seconds
+      </p>
+      <div id="loader">Verifying...</div>
+      <p class="resend-otp" id="resendContainer">
+        Not received an OTP? <a href="#" id="resendBtn">Resend OTP</a>
+      </p>
+    </div>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const phoneNumber = urlParams.get("phone");
+
+      let timeRemaining = 120;
+      const timerDisplay = document.getElementById("timeRemaining");
+      const messageDisplay = document.getElementById("message");
+
+      const startTimer = () => {
+        const interval = setInterval(() => {
+          if (timeRemaining > 0) {
+            timeRemaining--;
+            timerDisplay.textContent = timeRemaining;
+          } else {
+            clearInterval(interval);
+            messageDisplay.textContent = "OTP expired.";
+            messageDisplay.classList.add("error");
+            document.getElementById("verifyBtn").disabled = true;
+          }
+        }, 1000);
+      };
+
+      startTimer();
+
+      function moveToNextInput(currentInput) {
+        if (currentInput.value.length === 1) {
+          const nextInput = currentInput.nextElementSibling;
+          if (nextInput) {
+            nextInput.focus();
+          }
+        }
+      }
+
+      const otpInputs = document.querySelectorAll(".otp-inputs input");
+
+      otpInputs.forEach((input) => {
+        input.addEventListener("input", function () {
+          if (this.value.match(/[^0-9]/)) {
+            this.value = "";
+          }
+          moveToNextInput(this);
+        });
+
+        input.addEventListener("keydown", function (event) {
+          if (event.key === "Backspace" && this.value === "") {
+            const prevInput = this.previousElementSibling;
+            if (prevInput) {
+              prevInput.focus();
+            }
+          }
+        });
+      });
+
+      document
+        .getElementById("verifyBtn")
+        .addEventListener("click", function () {
+          const otp1 = document.getElementById("otp1").value;
+          const otp2 = document.getElementById("otp2").value;
+          const otp3 = document.getElementById("otp3").value;
+          const otp4 = document.getElementById("otp4").value;
+
+          const otp = otp1 + otp2 + otp3 + otp4;
+
+          if (otp.length < 4) {
+            messageDisplay.textContent = "Please enter a complete OTP.";
+            messageDisplay.classList.add("error");
+            return;
+          }
+
+          document.getElementById("loader").style.display = "block";
+
+          fetch("/verify-otp", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ number: phoneNumber, otp }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                messageDisplay.textContent = "OTP verified successfully!";
+                messageDisplay.classList.add("success");
+
+                setTimeout(() => {
+                  window.location.href = "name_shopname.html";
+                }, 2000);
+              } else {
+                throw new Error(data.message);
+              }
+            })
+            .catch((error) => {
+              messageDisplay.textContent = error.message;
+              messageDisplay.classList.add("error");
+            })
+            .finally(() => {
+              document.getElementById("loader").style.display = "none";
+            });
+        });
+
+      document
+        .getElementById("resendBtn")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+
+          fetch("/send-otp", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ number: phoneNumber }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                messageDisplay.textContent =
+                  "OTP resent. Please check your phone.";
+                messageDisplay.classList.remove("error");
+                messageDisplay.classList.add("success");
+                timeRemaining = 120;
+                timerDisplay.textContent = timeRemaining;
+
+                document.getElementById("verifyBtn").disabled = false;
+                startTimer();
+              } else {
+                throw new Error(data.message);
+              }
+            })
+            .catch((error) => {
+              messageDisplay.textContent = error.message;
+              messageDisplay.classList.add("error");
+            });
+        });
+    </script>
+  </body>
+</html>
