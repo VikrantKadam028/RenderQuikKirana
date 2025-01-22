@@ -12,7 +12,7 @@ document.getElementById("submitBtn").addEventListener("click", async () => {
   const phoneNumber = document.getElementById("number").value;
 
   try {
-    const response = await fetch("/send-otp", {
+    const response = await fetch("https://renderquikkirana.onrender.com/send-otp", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
