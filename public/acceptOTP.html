@@ -241,6 +241,12 @@
                 messageDisplay.textContent = "OTP verified successfully!";
                 messageDisplay.classList.add("success");
 
+                localStorage.setItem("userMobile", phoneNumber);
+                localStorage.setItem("signupComplete", "false"); // User still needs to complete setup
+
+                // Redirect to name and shop name entry page
+                window.location.href = "name_shopname.html";
+
                 setTimeout(() => {
                   window.location.href = "name_shopname.html";
                 }, 2000);
