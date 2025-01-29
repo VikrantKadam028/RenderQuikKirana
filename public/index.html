@@ -17,7 +17,7 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%; 
+        width: 100%;
         height: 100%;
         background: rgba(255, 255, 255, 0.8);
         z-index: 9999;
@@ -43,9 +43,7 @@
     </style>
   </head>
   <body>
-    
     <div id="loader">
-      
       <div class="loader-animation"></div>
     </div>
     <div class="main">
@@ -97,6 +95,21 @@
         });
       }
 
+      window.onload = function () {
+        const userMobile = localStorage.getItem("userMobile");
+        const signupComplete = localStorage.getItem("signupComplete");
+
+        if (userMobile) {
+          if (signupComplete === "true") {
+            // User is already registered and setup is complete, go to dashboard
+            window.location.href = "dashboard.html";
+          } else {
+            // User is registered but setup is incomplete, go to name entry page
+            window.location.href = "name_shopname.html";
+          }
+        }
+      };
+
       document
         .getElementById("submitBtn")
         .addEventListener("click", function (event) {
@@ -138,8 +151,6 @@
               submitBtn.disabled = false;
             });
         });
-
-
     </script>
     <script src="script.js"></script>
   </body>
