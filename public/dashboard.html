@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>QuikKirana | Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #f9fafc;
+        color: #2c3e50;
+        height: 100%;
+        outline: none;
+        -webkit-tap-highlight-color: transparent; /* For iOS Safari and other WebKit browsers */
+        -webkit-user-select: none;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background-color: #ffffff;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        padding: 1.5rem 1.5rem;
+        padding-top: 2rem;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        border-bottom-left-radius: 25px;
+        border-bottom-right-radius: 25px;
+      }
+
+      .header img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .header h1 {
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .header p {
+        margin: 0;
+        font-size: 1rem;
+        color: #dce3f0;
+      }
+
+      .button {
+        padding: 2.5rem;
+        margin: 0.5rem 1rem;
+        border-radius: 0.825rem;
+        text-align: center;
+        font-size: 1.6rem;
+        margin-top: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+        gap: 0.5rem;
+        transition: background-color 0.3s;
+        border: none;
+        cursor: pointer;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #ffffff;
+      }
+
+      .button:hover {
+        background-color: #005bb5;
+      }
+
+      .button i {
+        font-size: 3rem;
+      }
+
+      .add-products {
+        padding: 1.2rem;
+        margin: 0.5rem 1rem;
+        border-radius: 50px;
+        text-align: center;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: background-color 0.3s;
+        border: none;
+        cursor: pointer;
+        background-color: #ffffff;
+        color: grey;
+        border: 2px solid black;
+      }
+
+      .add-products:hover {
+        background-color: #f0f6ff;
+      }
+
+      .order {
+        background-color: #f5f5f5;
+        padding: 1rem 2rem;
+        border-radius: 0.625rem;
+        margin: 0.8rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .order p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: #333;
+      }
+
+      .order i {
+        color: #e74c3c;
+        cursor: pointer;
+      }
+
+      .menu {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        padding: 1rem;
+        margin: 0 auto;
+        width: 90%;
+      }
+
+      .menu div {
+        text-align: center;
+        height: 100px;
+        font-size: 0.875rem;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .menu div:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .menu i {
+        font-size: 1.9rem;
+        color: #1a73e8;
+        margin-bottom: 0.5rem;
+      }
+
+      .menu p {
+        margin: 0.5rem 0 0;
+        font-size: 1rem;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-around;
+        padding: 0.8rem 0;
+        color: white;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        border-top-left-radius: 30px;
+        border-top-right-radius: 30px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+      }
+
+      .fa-home:before {
+        color: white;
+      }
+      .fa-users:before {
+        color: white;
+      }
+      .fa-cog:before {
+        color: white;
+      }
+      .fa-clipboard-list:before {
+        color: grey;
+      }
+      .fa-store:before {
+        color: grey;
+      }
+      .fa-chart-line:before {
+        color: grey;
+      }
+      .fa-file-invoice:before {
+        color: grey;
+      }
+
+      .footer div {
+        text-align: center;
+        font-size: 0.875rem;
+        color: white;
+        cursor: pointer;
+        transition: color 0.2s;
+      }
+
+      .footer div:hover {
+        color: #1a73e8;
+      }
+
+      .footer i {
+        font-size: 1.7rem;
+        color: #1a73e8;
+      }
+
+      .footer p {
+        margin: 0.35rem 0 0;
+      }
+
+      @media (max-width: 400px) {
+        .header h1 {
+          font-size: 1.2rem;
+        }
+        .button i {
+          font-size: 2.5rem;
+        }
+        .add-products {
+          font-size: 1.2rem;
+        }
+        .button {
+          font-size: 1.3rem;
+        }
+        .order p {
+          font-size: 0.8rem;
+        }
+        .menu {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .order.permanent-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 600px;
+        margin: 10px auto;
+      }
+
+      .text-content {
+        flex: 1;
+      }
+
+      .text-content p {
+        margin: 0;
+        line-height: 1.5;
+        color: #333;
+      }
+
+      .image-content img {
+        width: 50px;
+        height: auto;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img id="storeImage" src="placeholder.jpg" alt="Store Logo" />
+        <div>
+          <h1 id="storeName">Loading...</h1>
+          <p>Hello, <span id="userName">User</span> 👋</p>
+        </div>
+      </div>
+
+      <div class="button" onclick="window.location.href='barcode.html'">
+        <span>Add New Bill<br />( नया बिल )</span>
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+
+      <div
+        class="add-products"
+        onclick="window.location.href='add-product.html'"
+      >
+        <span>Add New Products</span>
+        <i class="fas fa-plus-circle"></i>
+      </div>
+
+      <!-- <div class="order">
+        <div>
+          <p><strong>New Order #1</strong></p>
+          <p>from: Pandhurang Patil</p>
+        </div>
+        <i class="fas fa-trash-alt"></i>
+      </div> -->
+
+      <div class="order permanent-box">
+        <div class="text-content">
+          <p><strong>Setup Your Online Store</strong></p>
+          <p>Start managing your orders online with ease!</p>
+        </div>
+        <div class="image-content">
+          <img
+            src="https://media.istockphoto.com/id/467970412/vector/groceries.jpg?s=612x612&w=0&k=20&c=tH30XMv3C-OnoxGIvN3sWmjbmtbdOJMuffd_dR9L5Z8="
+            alt="Snacks"
+          />
+        </div>
+      </div>
+
+      <div class="menu">
+        <div>
+          <i class="fas fa-store"></i>
+          <p>My Stock</p>
+        </div>
+        <div>
+          <i class="fas fa-clipboard-list"></i>
+          <p>Low Stocks</p>
+        </div>
+        <div>
+          <i class="fas fa-chart-line"></i>
+          <p>Profit Analysis</p>
+        </div>
+        <div>
+          <i class="fas fa-file-invoice"></i>
+          <p>Last Bills</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>
+          <i class="fas fa-home"></i>
+          <p>Home</p>
+        </div>
+        <div>
+          <i class="fas fa-users"></i>
+          <p>Customers</p>
+        </div>
+        <div>
+          <i class="fas fa-cog"></i>
+          <p>Settings</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async function () {
+        try {
+          // Get phone number from localStorage (saved during OTP verification)
+          const phoneNumber = localStorage.getItem("phoneNumber");
+
+          if (!phoneNumber) {
+            console.error("No phone number found in localStorage");
+            window.location.href = "index.html"; // Redirect to login if no phone number
+            return;
+          }
+
+          // Fetch user details from server
+          const response = await fetch("/get-user", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ phoneNumber }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Update DOM with user details from database
+            const { username, shopName, profilePicture } = data.user;
+
+            if (shopName) {
+              document.getElementById("storeName").textContent = shopName;
+            }
+
+            if (profilePicture) {
+              document.getElementById("storeImage").src = profilePicture;
+            }
+
+            if (username) {
+              document.getElementById("userName").textContent = username;
+            }
+          } else {
+            console.error("Failed to fetch user details:", data.message);
+            // Optionally fall back to localStorage if server fetch fails
+            const shopName = localStorage.getItem("shopname");
+            const profileImage = localStorage.getItem("profileImage");
+            const username = localStorage.getItem("username");
+
+            if (shopName) {
+              document.getElementById("storeName").textContent = shopName;
+            }
+            if (profileImage) {
+              document.getElementById("storeImage").src = profileImage;
+            }
+            if (username) {
+              document.getElementById("userName").textContent = username;
+            }
+          }
+        } catch (error) {
+          console.error("Error loading user details:", error);
+          // Fall back to localStorage on error
+          const shopName = localStorage.getItem("shopname");
+          const profileImage = localStorage.getItem("profileImage");
+          const username = localStorage.getItem("username");
+
+          if (shopName) {
+            document.getElementById("storeName").textContent = shopName;
+          }
+          if (profileImage) {
+            document.getElementById("storeImage").src = profileImage;
+          }
+          if (username) {
+            document.getElementById("userName").textContent = username;
+          }
+        }
+      });
+
+      document.querySelectorAll(".menu div").forEach((item) => {
+        item.addEventListener("click", function () {
+          const feature = this.querySelector("p").textContent;
+          console.log(`Clicked on ${feature}`);
+        });
+      });
+
+      document
+        .querySelector(".order .fa-trash-alt")
+        .addEventListener("click", function () {
+          const orderElement = this.closest(".order");
+          if (confirm("Are you sure you want to delete this order?")) {
+            orderElement.remove();
+          }
+        });
+
+      document.querySelector(".button").addEventListener("click", function () {
+        console.log("New Bill button clicked");
+      });
+
+      document
+        .querySelector(".add-products")
+        .addEventListener("click", function () {
+          console.log("Add Products button clicked");
+        });
+    </script>
+  </body>
+</html>
