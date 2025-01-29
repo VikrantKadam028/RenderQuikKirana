@@ -4,7 +4,6 @@ const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
 const User = require("./models/User");
-const UserInfo = require("./models/UserInfo");
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
@@ -12,7 +11,6 @@ const client = require("twilio")(accountSid, authToken);
 const app = express();
 
 app.use(cors());
-// Increase JSON payload limit to 10MB
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -29,7 +27,11 @@ mongoose
 const otpStore = {};
 const OTP_EXPIRY_TIME = 2 * 60 * 1000; // 2 minutes
 
-// Middleware for content type
+// Helper functions
+const generateOTP = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+};
+
 app.use((req, res, next) => {
   if (req.url.endsWith(".css")) {
     res.type("text/css");
@@ -40,11 +42,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-// Helper functions
-const generateOTP = () => {
-  return Math.floor(1000 + Math.random() * 9000).toString();
-};
 
 const sendSMS = async (toNumber, body) => {
   const msgOptions = {
@@ -62,257 +59,114 @@ const sendSMS = async (toNumber, body) => {
   }
 };
 
-// Get phone number endpoint
-app.get("/get-phone-number", async (req, res) => {
-  try {
-    const latestUser = await User.findOne().sort({ createdAt: -1 });
+// New route to update user profile
+app.post("/update-profile", async (req, res) => {
+  const { phoneNumber, username, shopName, profilePicture } = req.body;
 
-    if (!latestUser) {
-      return res.status(404).json({
-        success: false,
-        message: "No user found",
-      });
-    }
+  console.log("Received phone number:", phoneNumber);
 
-    res.status(200).json({
-      success: true,
-      phoneNumber: latestUser.phoneNumber,
-    });
-  } catch (error) {
-    console.error("Error retrieving phone number:", error);
-    res.status(500).json({
+  if (!phoneNumber) {
+    return res.status(400).json({
       success: false,
-      message: "Failed to retrieve phone number",
-      error: error.message,
+      message: "Phone number is required",
     });
   }
-});
 
-app.post("/save-user-info", async (req, res) => {
   try {
-    const { phoneNumber, username, shopname, profilePicture } = req.body;
+    // Log all users in the database
+    const allUsers = await User.find({});
+    console.log("All users in database:", allUsers);
 
-    if (!phoneNumber || !username || !shopname) {
-      return res.status(400).json({
-        success: false,
-        message: "Phone number, username, and shop name are required",
-      });
-    }
-
-    // Find the user by phone number
+    // Find user with phone number
     const user = await User.findOne({ phoneNumber });
+    console.log("Found user:", user);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found with this phone number",
+      // Try finding with different formats
+      const formattedNumber = phoneNumber.replace(/\D/g, ""); // Remove non-digits
+      console.log("Trying formatted number:", formattedNumber);
+      const userWithFormattedNumber = await User.findOne({
+        phoneNumber: formattedNumber,
       });
-    }
 
-    // Find user info linked to this user ID
-    let userInfo = await UserInfo.findOne({ userId: user._id });
+      if (userWithFormattedNumber) {
+        // Update and save user
+        userWithFormattedNumber.username = username;
+        userWithFormattedNumber.shopName = shopName;
+        userWithFormattedNumber.profilePicture = profilePicture;
+        await userWithFormattedNumber.save();
 
-    if (userInfo) {
-      // Update existing user info
-      userInfo.username = username;
-      userInfo.shopname = shopname;
-      if (profilePicture) {
-        userInfo.profilePicture = profilePicture;
+        return res.status(200).json({
+          success: true,
+          message: "Profile updated successfully",
+          user: userWithFormattedNumber,
+        });
       }
-      userInfo.updatedAt = new Date();
-      await userInfo.save();
-    } else {
-      // Create new user info
-      userInfo = new UserInfo({
-        userId: user._id,
-        username,
-        shopname,
-        profilePicture,
+
+      return res.status(404).json({
+        success: false,
+        message:
+          "User not found. Debug info: " +
+          `Tried phone numbers: ${phoneNumber} and ${formattedNumber}`,
       });
-      await userInfo.save();
     }
+
+    // Update user profile
+    user.username = username;
+    user.shopName = shopName;
+    user.profilePicture = profilePicture;
+
+    await user.save();
 
     res.status(200).json({
       success: true,
-      message: "User information saved successfully",
-      userInfo: {
-        phoneNumber: user.phoneNumber,
-        username: userInfo.username,
-        shopname: userInfo.shopname,
-        profilePicture: userInfo.profilePicture ? true : false,
-      },
+      message: "Profile updated successfully",
+      user,
     });
   } catch (error) {
-    console.error("Error saving user information:", error);
+    console.error("Error updating profile:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to save user information",
-      error: error.message,
+      message: "Failed to update profile: " + error.message,
     });
   }
 });
 
-// // Save user info endpoint
-// app.post("/save-user-info", async (req, res) => {
-//   try {
-//     const { phoneNumber, username, shopname, profilePicture } = req.body;
+// Fetch user details from the database
+app.post("/get-user", async (req, res) => {
+  const { phoneNumber } = req.body;
 
-//     if (!phoneNumber || !username || !shopname) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Phone number, username, and shop name are required",
-//       });
-//     }
+  if (!phoneNumber) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Phone number is required" });
+  }
 
-//     // Find user by phone number
-//     const user = await User.findOne({ phoneNumber });
-
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found with this phone number",
-//       });
-//     }
-
-//     // Check if user info already exists
-//     let userInfo = await UserInfo.findOne({ userId: user._id });
-
-//     if (userInfo) {
-//       // Update existing user info
-//       userInfo.username = username;
-//       userInfo.shopname = shopname;
-//       if (profilePicture) {
-//         userInfo.profilePicture = profilePicture;
-//       }
-//       userInfo.updatedAt = new Date();
-//       await userInfo.save();
-//     } else {
-//       // Create new user info
-//       userInfo = new UserInfo({
-//         userId: user._id,
-//         username,
-//         shopname,
-//         profilePicture,
-//       });
-//       await userInfo.save();
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: "User information saved successfully",
-//       userInfo: {
-//         phoneNumber: user.phoneNumber,
-//         username: userInfo.username,
-//         shopname: userInfo.shopname,
-//         profilePicture: userInfo.profilePicture ? true : false,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error saving user information:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to save user information",
-//       error: error.message,
-//     });
-//   }
-// });
-
-// Get user info endpoint
-app.get("/get-user-info/:phoneNumber", async (req, res) => {
   try {
-    const { phoneNumber } = req.params;
-
-    if (!phoneNumber) {
-      return res.status(400).json({
-        success: false,
-        message: "Phone number is required",
-      });
-    }
-
     const user = await User.findOne({ phoneNumber });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
 
-    const userInfo = await UserInfo.findOne({ userId: user._id });
-    if (!userInfo) {
-      return res.status(404).json({
-        success: false,
-        message: "User information not found",
-      });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.status(200).json({
       success: true,
-      userInfo: {
-        phoneNumber: user.phoneNumber,
-        username: userInfo.username,
-        shopname: userInfo.shopname,
-        profilePicture: userInfo.profilePicture,
+      user: {
+        username: user.username,
+        shopName: user.shopName,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {
-    console.error("Error retrieving user information:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to retrieve user information",
-      error: error.message,
-    });
+    console.error("Error fetching user details:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch user details" });
   }
 });
 
-// app.get("/get-user-info/:phoneNumber", async (req, res) => {
-//   try {
-//     const { phoneNumber } = req.params;
-
-//     if (!phoneNumber) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Phone number is required",
-//       });
-//     }
-
-//     // Find the user by phone number
-//     const user = await User.findOne({ phoneNumber });
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     // Find user info linked to this user's ID
-//     const userInfo = await UserInfo.findOne({ userId: user._id });
-//     if (!userInfo) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User information not found",
-//       });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       userInfo: {
-//         phoneNumber: user.phoneNumber,
-//         username: userInfo.username,
-//         shopname: userInfo.shopname,
-//         profilePicture: userInfo.profilePicture,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error retrieving user information:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to retrieve user information",
-//       error: error.message,
-//     });
-//   }
-// });
-
-// Send OTP endpoint
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
 
@@ -334,46 +188,52 @@ app.post("/send-otp", async (req, res) => {
   }
 
   try {
-    // Check if user exists in MongoDB
-    let user = await User.findOne({ phoneNumber: number });
-
-    if (!user) {
-      // Create new user if doesn't exist
-      user = new User({ phoneNumber: number });
-      await user.save();
-    }
-
     const otp = generateOTP();
     console.log("Generated OTP for", number, ":", otp);
 
     otpStore[number] = { otp, timestamp: Date.now() };
 
+    let user = await User.findOne({ phoneNumber: number });
+    if (!user) {
+      user = new User({
+        phoneNumber: number,
+        isVerified: false,
+      });
+      await user.save();
+      console.log("New user added:", user);
+    }
+
     await sendSMS(number, `Your OTP is: ${otp}`);
     res.status(200).json({ success: true, message: "OTP sent successfully!" });
   } catch (error) {
-    console.error("Error in /send-otp route:", error.message);
+    console.error("Error in /send-otp route:", error);
     res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 });
 
-// Verify OTP endpoint
 app.post("/verify-otp", async (req, res) => {
   const { number, otp } = req.body;
   console.log("Verifying OTP:", number, otp);
 
-  if (!otpStore[number]) {
-    return res.status(400).json({
-      success: false,
-      message: "No OTP found for this number",
-    });
-  }
-
-  if (otpStore[number].otp === otp) {
+  if (otpStore[number] && otpStore[number].otp === otp) {
     if (Date.now() - otpStore[number].timestamp < OTP_EXPIRY_TIME) {
       delete otpStore[number];
+
+      let user = await User.findOne({ phoneNumber: number });
+      if (!user) {
+        user = new User({
+          phoneNumber: number,
+          isVerified: true,
+        });
+      } else {
+        user.isVerified = true;
+      }
+
+      await user.save();
       return res.status(200).json({
         success: true,
         message: "OTP verified successfully!",
+        user: user,
       });
     } else {
       delete otpStore[number];
@@ -382,16 +242,14 @@ app.post("/verify-otp", async (req, res) => {
         message: "OTP has expired. Please request a new one.",
       });
     }
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid OTP",
+    });
   }
-
-  console.warn(`Invalid OTP attempt for ${number}: ${otp}`);
-  return res.status(400).json({
-    success: false,
-    message: "Invalid OTP",
-  });
 });
 
-// Reset OTP endpoint
 app.post("/reset-otp", (req, res) => {
   const { number } = req.body;
 
@@ -405,7 +263,6 @@ app.post("/reset-otp", (req, res) => {
   });
 });
 
-// Serve static files
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
