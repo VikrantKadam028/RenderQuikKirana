@@ -410,6 +410,10 @@
         // Show loader
         loaderContainer.style.display = "flex";
 
+        localStorage.setItem("userName", username);
+        localStorage.setItem("shopName", shopname);
+        window.location.href = "aftersigninloading.html";
+
         try {
           // First get the phone number
           const phoneResponse = await fetch("/get-phone-number");
