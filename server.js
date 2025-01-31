@@ -7,6 +7,7 @@ const User = require("./models/User");
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
+const Product = require("./models/Product");
 
 const app = express();
 
@@ -167,6 +168,188 @@ app.post("/get-user", async (req, res) => {
   }
 });
 
+
+
+app.post("/add-product", async (req, res) => {
+  try {
+    const { shopId, name, quantity, unit, barcode, mrp, retailPrice, wholesalePrice, includingGst, discount } = req.body;
+    
+    // Validate shopId format
+    if (!mongoose.Types.ObjectId.isValid(shopId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid shop ID format" 
+      });
+    }
+
+    // Check if shop/user exists
+    const shop = await User.findById(shopId);
+    if (!shop) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Shop not found" 
+      });
+    }
+
+    // Validate required fields
+    if (!name || !quantity || !unit || !mrp || !retailPrice || !wholesalePrice) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields" 
+      });
+    }
+
+    // Validate numeric fields
+    if (quantity < 0 || mrp < 0 || retailPrice < 0 || wholesalePrice < 0 || discount < 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Numeric values cannot be negative" 
+      });
+    }
+
+    // Check if barcode already exists (if provided)
+    if (barcode) {
+      const existingProduct = await Product.findOne({ barcode });
+      if (existingProduct) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Product with this barcode already exists" 
+        });
+      }
+    }
+
+    const newProduct = new Product({
+      shopId,
+      name,
+      quantity,
+      unit,
+      barcode,
+      mrp,
+      retailPrice,
+      wholesalePrice,
+      includingGst,
+      discount,
+    });
+
+    await newProduct.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Product added successfully!",
+      product: newProduct,
+    });
+  } catch (error) {
+    console.error("Error adding product:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to add product", 
+      error: error.message 
+    });
+  }
+});
+
+// // Add a route to get products for a specific shop
+// app.get("/products/:shopId", async (req, res) => {
+//   try {
+//     const { shopId } = req.params;
+
+//     if (!mongoose.Types.ObjectId.isValid(shopId)) {
+//       return res.status(400).json({ 
+//         success: false, 
+//         message: "Invalid shop ID format" 
+//       });
+//     }
+
+//     const products = await Product.find({ shopId }).sort({ createdAt: -1 });
+    
+//     res.status(200).json({
+//       success: true,
+//       products
+//     });
+//   } catch (error) {
+//     console.error("Error fetching products:", error);
+//     res.status(500).json({ 
+//       success: false, 
+//       message: "Failed to fetch products", 
+//       error: error.message 
+//     });
+//   }
+// });
+// Get single product by ID
+app.get("/products/:productId", async (req, res) => {
+  try {
+      const { productId } = req.params;
+      
+      if (!mongoose.Types.ObjectId.isValid(productId)) {
+          return res.status(400).json({
+              success: false,
+              message: "Invalid product ID format"
+          });
+      }
+      
+      const product = await Product.findById(productId);
+      
+      if (!product) {
+          return res.status(404).json({
+              success: false,
+              message: "Product not found"
+          });
+      }
+      
+      res.status(200).json({
+          success: true,
+          product
+      });
+  } catch (error) {
+      console.error("Error fetching product:", error);
+      res.status(500).json({
+          success: false,
+          message: "Failed to fetch product",
+          error: error.message
+      });
+  }
+});
+
+// Update product
+app.put("/products/:productId", async (req, res) => {
+  try {
+      const { productId } = req.params;
+      
+      if (!mongoose.Types.ObjectId.isValid(productId)) {
+          return res.status(400).json({
+              success: false,
+              message: "Invalid product ID format"
+          });
+      }
+      
+      const updatedProduct = await Product.findByIdAndUpdate(
+          productId,
+          req.body,
+          { new: true, runValidators: true }
+      );
+      
+      if (!updatedProduct) {
+          return res.status(404).json({
+              success: false,
+              message: "Product not found"
+          });
+      }
+      
+      res.status(200).json({
+          success: true,
+          product: updatedProduct
+      });
+  } catch (error) {
+      console.error("Error updating product:", error);
+      res.status(500).json({
+          success: false,
+          message: "Failed to update product",
+          error: error.message
+      });
+  }
+});
+
+
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
 
@@ -233,7 +416,8 @@ app.post("/verify-otp", async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "OTP verified successfully!",
-        user: user,
+        user: user._id,
+          
       });
     } else {
       delete otpStore[number];
