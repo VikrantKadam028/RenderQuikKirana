@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Loading...</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+        font-family: Poppins;
+      }
+
+      .main {
+        height: 100vh;
+        width: 100vw;
+        background-color: transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .loader {
+        text-align: center;
+      }
+
+      .loader img {
+        width: 180px;
+        height: auto;
+      }
+
+      .loading-text {
+        font-size: 16px;
+        margin-top: 16px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <div class="loader">
+        <img src="Grocery cart Loader.gif" alt="Loading..." />
+        <div class="loading-text" id="loading-text">
+          💻 Getting Your Dashboard Ready
+        </div>
+      </div>
+    </div>
+    <script>
+      let loadingTexts = ["⏳ Almost there!", "🔄 Please wait.."];
+      let currentIndex = 0;
+
+      window.onload = function () {
+        setTimeout(function () {
+          window.location.href = "dashboard.html";
+        }, 4000);
+      };
+      function changeText() {
+        document.getElementById("loading-text").innerHTML =
+          loadingTexts[currentIndex];
+        currentIndex = (currentIndex + 1) % loadingTexts.length;
+      }
+
+      setInterval(changeText, 2000); 
+    </script>
+  </body>
+</html>

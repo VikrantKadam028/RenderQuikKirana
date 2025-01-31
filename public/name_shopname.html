@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#ff3131" />
+    <title>QuikKirana | Inventory Management & Billing App</title>
+    <link rel="icon" href="logo.png" type="image/icon type" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        background-color: #ff3131;
+        overflow: hidden;
+      }
+
+      .main {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .background-design {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.1;
+      }
+
+      .circle {
+        position: absolute;
+        border-radius: 50%;
+        background-color: #ffffff;
+      }
+
+      .circle-1 {
+        width: 300px;
+        height: 300px;
+        top: -150px;
+        left: -150px;
+      }
+
+      .circle-2 {
+        width: 200px;
+        height: 200px;
+        top: 100px;
+        right: -100px;
+      }
+
+      .page {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+      }
+
+      .header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      #logo {
+        width: auto;
+        height: 60px;
+        margin-bottom: 10px;
+      }
+
+      .slogan {
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 20px;
+      }
+
+      .content {
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        /* border-radius: 30px 30px 0 0; */
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .content-inner {
+        width: 100%;
+        max-width: 400px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .profile-picture-uploader {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        overflow: hidden;
+        cursor: pointer;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s;
+      }
+
+      .profile-picture-uploader img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .upload-text {
+        font-size: 16px;
+        color: #777;
+        text-align: center;
+        position: absolute;
+        pointer-events: none;
+      }
+
+      .plus-icon {
+        position: absolute;
+        bottom: 50px;
+        right: 10px;
+        background-color: #ff3131;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border: 2px solid white;
+      }
+
+      label {
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      input {
+        height: 50px;
+        width: 100%;
+        background-color: #f0f0f0;
+        outline: none;
+        border: none;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        padding: 10px;
+        color: black;
+        font-size: 16px;
+      }
+
+      .policy {
+        color: blue;
+        font-size: 14px;
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      button {
+        padding: 15px;
+        font-size: 18px;
+        font-weight: 600;
+        background-color: #ff3131;
+        color: white;
+        border: none;
+        outline: none;
+        border-radius: 8px;
+        margin-top: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #e62020;
+      }
+
+      .progress-indicator {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        margin: 0 5px;
+        background-color: #d0d0d0;
+        border-radius: 50%;
+        display: inline-block;
+        transition: background-color 0.3s;
+      }
+
+      .dot.active {
+        background-color: #ff3131;
+      }
+
+      @media (max-width: 600px) {
+        .slogan {
+          font-size: 16px;
+        }
+
+        .profile-picture-uploader {
+          width: 250px;
+          height: 250px;
+        }
+
+        input,
+        button {
+          font-size: 14px;
+        }
+
+        .content-inner {
+          padding: 15px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .profile-picture-uploader {
+          width: 180px;
+          height: 180px;
+        }
+      }
+
+      .loader-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        display: none;
+      }
+
+      .loader {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #ff3131;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      #activedot {
+        background-color: red;
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loader-container" id="loaderContainer">
+      <div class="loader"></div>
+    </div>
+
+    <div class="main">
+      <div class="background-design">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+      </div>
+      <div class="page">
+        <div class="content">
+          <div class="content-inner">
+            <div
+              class="profile-picture-uploader"
+              onclick="document.getElementById('fileInput').click();"
+            >
+              <p class="upload-text" id="uploadText">
+                Upload a profile picture
+              </p>
+              <img src="placeholder.jpg" id="profilePicture" alt="" />
+              <div class="plus-icon">+</div>
+            </div>
+            <input
+              type="file"
+              id="fileInput"
+              style="display: none"
+              accept="image/*"
+            />
+
+            <label for="username">User Name</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="Enter your name"
+              required
+            />
+
+            <label for="shopname">Shop Name</label>
+            <input
+              type="text"
+              id="shopname"
+              placeholder="Enter your shop name"
+              required
+            />
+
+            <p class="policy">By logging in you are agreeing to our policies</p>
+
+            <div class="progress-indicator">
+              <span class="dot"></span>
+              <span class="dot active" id="activedot"></span>
+            </div>
+
+            <button id="submitBtn">
+              Next <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://kit.fontawesome.com/5274d0405c.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const profilePicture = document.getElementById("profilePicture");
+      const uploadText = document.getElementById("uploadText");
+      const submitBtn = document.getElementById("submitBtn");
+      const usernameInput = document.getElementById("username");
+      const shopnameInput = document.getElementById("shopname");
+      const loaderContainer = document.getElementById("loaderContainer");
+
+      let currentStep = 0;
+
+      fileInput.addEventListener("change", function () {
+        const file = this.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            profilePicture.src = e.target.result;
+            uploadText.style.display = "none";
+            localStorage.setItem("profileImage", e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      submitBtn.addEventListener("click", async function () {
+        const username = usernameInput.value.trim();
+        const shopname = shopnameInput.value.trim();
+        const phoneNumber = localStorage.getItem("phoneNumber"); // Get phone number from localStorage
+        const profilePicture = localStorage.getItem("profileImage");
+
+        console.log("Stored phone number:", phoneNumber); // Debug log
+
+        if (!username || !shopname) {
+          alert("Please fill in all required fields!");
+          return;
+        }
+
+        if (!phoneNumber) {
+          alert(
+            "Phone number not found in localStorage. Please verify your phone number first."
+          );
+          return;
+        }
+
+        try {
+          loaderContainer.style.display = "flex";
+
+          const payload = {
+            phoneNumber,
+            username,
+            shopName: shopname,
+            profilePicture,
+          };
+
+          console.log("Sending payload:", payload); // Debug log
+
+          const response = await fetch("/update-profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          console.log("Response status:", response.status); // Debug log
+
+          const data = await response.json();
+          console.log("Response data:", data); // Debug log
+
+          if (data.success) {
+            // Store user data in localStorage
+            localStorage.setItem("username", username);
+            localStorage.setItem("shopname", shopname);
+
+            // Redirect to dashboard
+            window.location.href = "dashboard.html";
+          } else {
+            alert(data.message || "Failed to update profile");
+          }
+        } catch (error) {
+          console.error("Error updating profile:", error);
+          alert(
+            "An error occurred while updating your profile. Check console for details."
+          );
+        } finally {
+          loaderContainer.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

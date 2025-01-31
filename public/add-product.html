@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Products Manually</title>
+  <style>
+    /* Reset and Global Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+    }
+
+    /* Header Section */
+    .header {
+      background-color: #004d61;
+      color: white;
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    h1 {
+      font-size: 18px;
+    }
+
+    .back-button {
+      margin-right: 16px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Container Styles */
+    .container {
+      padding: 24px;
+      max-width: 600px;
+      /* margin: 20px auto; */
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-icon {
+      display: block;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 20px auto;
+    }
+
+    /* Input Fields */
+    .input-field {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 16px;
+    }
+
+    /* Quantity Section */
+    .quantity-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .quantity-container label {
+      font-weight: 500;
+    }
+
+    /* Variant Section */
+    .variant-section {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 24px;
+    }
+
+    .variant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      font-weight: 500;
+      color: #6366f1;
+      margin-bottom: 12px;
+    }
+
+    .barcode-section {
+      position: relative;
+    }
+
+    .barcode-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+    }
+
+    .barcode-input {
+      padding-left: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .auto-generate-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .auto-btn {
+      background-color: #e5e5e5;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      color: #333;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Price Section */
+    .price-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .price-grid label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .discount-container {
+      position: relative;
+    }
+
+    .discount-input {
+      padding-right: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .percent-indicator {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+    }
+
+    .add-multiple-price {
+      color: #22c55e;
+      font-weight: 500;
+      margin-top: 16px;
+      cursor: pointer;
+    }
+
+    /* Additional Details */
+    .additional-details {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 24px;
+      background-color: #f9f9f9;
+    }
+
+    .add-variant-button {
+      background-color: #f5f7ff;
+      color: #6366f1;
+      border: none;
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background-color: #000;
+      color: white;
+    }
+
+    .btn-save {
+      background-color: #22c55e;
+      color: white;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+      }
+
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .scanner-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .scanner-container {
+      width: 90%;
+      max-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .close-scanner {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 300px;
+      margin-top: 20px;
+    }
+
+    .scanner-active .scanner-overlay {
+      display: flex;
+    }
+
+    .barcode-section {
+      position: relative;
+    }
+
+    .scan-button {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #333;
+    }
+  </style>
+  <script src="https://kit.fontawesome.com/5274d0405c.js" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@latest/html5-qrcode.min.js"></script>
+</head>
+
+<body>
+  <header class="header">
+    <span class="back-button" onclick="window.location.href='dashboard.html'"">←</span>
+      <h1>Add Products Manually</h1>
+    </header>
+
+    <div class=" container">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYaoYfMAG3k2mzseNmXZIswXGwEyiZVk0eoQ&s"
+        alt="Product Icon" class="product-icon" />
+
+      <input type="text" placeholder="Product Name" class="input-field" />
+
+      <div class="quantity-container">
+        <label>Quantity</label>
+        <input type="number" value="0" min="0" class="input-field" />
+        <select class="input-field">
+          <option>Piece</option>
+        </select>
+      </div>
+
+      <div class="variant-section">
+        <div class="variant-header">
+          <span>Variant #1</span>
+          <span>⬍</span>
+        </div>
+
+        <input type="text" placeholder="ex: 1 Pc, S, XL, etc" class="input-field" />
+
+        <div class="barcode-section">
+          <span class="barcode-icon">
+            <i class="fa-solid fa-qrcode"></i>
+          </span>
+          <input type="text" placeholder="Enter Barcode Number" class="input-field barcode-input" id="barcodeInput" />
+          <button class="scan-button" onclick="startScanner()">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+        </div>
+
+        <div class="price-grid">
+          <div>
+            <label>MRP</label>
+            <input type="text" id="mrpInput" placeholder="Rs. 0" class="input-field" />
+          </div>
+          <div>
+            <label>Retail</label>
+            <input type="text" id="InputRetail" placeholder="Rs. 0" class="input-field" />
+          </div>
+          <div>
+            <label>Wholesale</label>
+            <input type="text" id="InputWholesale" placeholder="Rs. 0" class="input-field" />
+          </div>
+        </div>
+
+        <div class="checkbox-container">
+          <input type="checkbox" id="default-price" />
+          <label for="default-price">Set as default price</label>
+        </div>
+
+        <div class="checkbox-container">
+          <input type="checkbox" id="including-gst" />
+          <label for="including-gst">Including GST</label>
+        </div>
+
+        <div class="discount-container">
+          <input type="number" placeholder="0" class="input-field discount-input" />
+          <span class="percent-indicator">%</span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-cancel">Cancel</button>
+        <button class="btn btn-save">Save</button>
+      </div>
+
+      <div class="scanner-overlay">
+        <div class="scanner-container">
+          <button class="close-scanner" onclick="stopScanner()">×</button>
+          <h2>Scan Barcode</h2>
+          <div id="reader"></div>
+        </div>
+      </div>
+      </div>
+
+      <script>
+
+
+        // document.addEventListener("DOMContentLoaded", () => {
+        //   document.querySelector(".btn-save").addEventListener("click", async () => {
+        //     const shopId = localStorage.getItem("shopId");
+
+        //     // Ensure the shopId is available
+        //     if (!shopId) {
+        //       alert("User is not logged in. Please log in first.");
+        //       return;
+        //     }
+
+        //     // Select elements and check if they exist
+        //     const nameInput = document.querySelector(".input-field");
+        //     const quantityInput = document.querySelector(".quantity-container input");
+        //     const unitSelect = document.querySelector(".quantity-container select");
+        //     const barcodeInput = document.getElementById("barcodeInput");
+        //     const mrpInput = document.getElementById("mrpInput");
+        //     const retailInput = document.getElementById("InputRetail");
+        //     const wholesaleInput = document.getElementById("InputWholesale");
+        //     const includingGstCheckbox = document.getElementById("including-gst");
+        //     const discountInput = document.querySelector(".discount-input");
+
+        //     // Check if any of the elements are null
+        //     // if (!nameInput || !quantityInput || !unitSelect || !mrpInput || !retailInput || !wholesaleInput) {
+        //     //   console.error("One or more input fields are missing in the DOM.");
+        //     //   alert("Please fill out all fields before saving.");
+        //     //   return;
+        //     // }
+
+        //     // Get values safely
+        //     const name = nameInput.value.trim();
+        //     const quantity = parseInt(quantityInput.value) || 0;
+        //     const unit = unitSelect.value;
+        //     const barcode = barcodeInput ? barcodeInput.value.trim() : "";
+        //     const mrp = parseFloat(mrpInput.value) || 0;
+        //     const retailPrice = parseFloat(retailInput.value) || 0;
+        //     const wholesalePrice = parseFloat(wholesaleInput.value) || 0;
+        //     const includingGst = includingGstCheckbox ? includingGstCheckbox.checked : false;
+        //     const discount = parseFloat(discountInput ? discountInput.value : "0") || 0;
+
+        //     // Validate input values
+        //     if (!name || quantity <= 0 || mrp <= 0 || retailPrice <= 0 || wholesalePrice <= 0) {
+        //       alert("Please enter valid product details.");
+        //       return;
+        //     }
+
+        //     const productData = { shopId, name, quantity, unit, barcode, mrp, retailPrice, wholesalePrice, includingGst, discount };
+
+        //     try {
+        //       const response = await fetch("http://localhost:3000/add-product", {
+        //         method: "POST",
+        //         headers: { "Content-Type": "application/json" },
+        //         body: JSON.stringify(productData),
+        //       });
+
+        //       const data = await response.json();
+        //       if (data.success) {
+        //         alert("Product added successfully!");
+        //         window.location.reload();
+        //       } else {
+        //         alert("Error: " + data.message);
+        //       }
+        //     } catch (error) {
+        //       console.error("Failed to add product:", error);
+        //       alert("Server error. Please try again later.");
+        //     }
+        //   });
+        // });
+
+        // Add this script to add-product.html just before the closing </body> tag:
+
+        // Function to fetch product details
+        async function fetchProductDetails(productId) {
+          try {
+            const response = await fetch(`/products/${productId}`);
+            const data = await response.json();
+
+            if (data.success) {
+              return data.product;
+            } else {
+              throw new Error(data.message);
+            }
+          } catch (error) {
+            console.error('Error fetching product details:', error);
+            alert('Failed to fetch product details');
+            return null;
+          }
+        }
+
+        // Function to populate form fields
+        function populateForm(product) {
+          // Update page title
+          document.querySelector('h1').textContent = 'Edit Product';
+
+          // Populate basic info
+          document.querySelector('input[placeholder="Product Name"]').value = product.name;
+          document.querySelector('.quantity-container input').value = product.quantity;
+          document.querySelector('.quantity-container select').value = product.unit;
+
+          // Populate barcode
+          document.getElementById('barcodeInput').value = product.barcode || '';
+
+          // Populate prices
+          document.getElementById('mrpInput').value = product.mrp;
+          document.getElementById('InputRetail').value = product.retailPrice;
+          document.getElementById('InputWholesale').value = product.wholesalePrice;
+
+          // Set checkboxes
+          document.getElementById('including-gst').checked = product.includingGst;
+
+          // Set discount
+          document.querySelector('.discount-input').value = product.discount || 0;
+
+          // Store product ID for update operation
+          localStorage.setItem('currentEditProductId', product._id);
+        }
+
+        // Modify the existing save button click handler
+        document.addEventListener("DOMContentLoaded", () => {
+          // Check if we're in edit mode
+          const editProductId = localStorage.getItem('editProductId');
+
+          if (editProductId) {
+            // Fetch and populate product details
+            fetchProductDetails(editProductId).then(product => {
+              if (product) {
+                populateForm(product);
+              }
+            });
+
+            // Clear the edit flag from localStorage
+            localStorage.removeItem('editProductId');
+          }
+
+          document.querySelector(".btn-save").addEventListener("click", async () => {
+            const currentEditProductId = localStorage.getItem('currentEditProductId');
+            const shopId = localStorage.getItem("shopId");
+
+            if (!shopId) {
+              alert("User is not logged in. Please log in first.");
+              return;
+            }
+
+            // Get all form values (using your existing code)
+            const nameInput = document.querySelector(".input-field");
+            const quantityInput = document.querySelector(".quantity-container input");
+            const unitSelect = document.querySelector(".quantity-container select");
+            const barcodeInput = document.getElementById("barcodeInput");
+            const mrpInput = document.getElementById("mrpInput");
+            const retailInput = document.getElementById("InputRetail");
+            const wholesaleInput = document.getElementById("InputWholesale");
+            const includingGstCheckbox = document.getElementById("including-gst");
+            const discountInput = document.querySelector(".discount-input");
+
+            // Get values safely
+            const productData = {
+              shopId,
+              name: nameInput.value.trim(),
+              quantity: parseInt(quantityInput.value) || 0,
+              unit: unitSelect.value,
+              barcode: barcodeInput ? barcodeInput.value.trim() : "",
+              mrp: parseFloat(mrpInput.value) || 0,
+              retailPrice: parseFloat(retailInput.value) || 0,
+              wholesalePrice: parseFloat(wholesaleInput.value) || 0,
+              includingGst: includingGstCheckbox ? includingGstCheckbox.checked : false,
+              discount: parseFloat(discountInput ? discountInput.value : "0") || 0
+            };
+
+            // Validate input values
+            if (!productData.name || productData.quantity <= 0 || productData.mrp <= 0 ||
+              productData.retailPrice <= 0 || productData.wholesalePrice <= 0) {
+              alert("Please enter valid product details.");
+              return;
+            }
+
+            try {
+              const url = currentEditProductId
+                ? `/products/${currentEditProductId}`
+                : "/add-product";
+
+              const method = currentEditProductId ? "PUT" : "POST";
+
+              const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(productData),
+              });
+
+              const data = await response.json();
+              if (data.success) {
+                alert(currentEditProductId ? "Product updated successfully!" : "Product added successfully!");
+                // Clear the edit product ID
+                localStorage.removeItem('currentEditProductId');
+                // Redirect to inventory page
+                window.location.href = 'my_stock.html';
+              } else {
+                alert("Error: " + data.message);
+              }
+            } catch (error) {
+              console.error("Failed to save product:", error);
+              alert("Server error. Please try again later.");
+            }
+          });
+
+          // Handle cancel button
+          document.querySelector(".btn-cancel").addEventListener("click", () => {
+            localStorage.removeItem('currentEditProductId');
+            window.location.href = 'my_stock.html';
+          });
+        });
+
+
+
+        let html5QrcodeScanner = null;
+
+        function startScanner() {
+          document.body.classList.add('scanner-active');
+
+          if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+              fps: 10,
+              qrbox: { width: 250, height: 150 },
+              aspectRatio: 1.0,
+              showTorchButtonIfSupported: true
+            });
+          }
+
+          html5QrcodeScanner.render((decodedText) => {
+            // Handle the scanned barcode
+            document.getElementById('barcodeInput').value = decodedText;
+            stopScanner();
+          });
+        }
+
+        function stopScanner() {
+          if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+          }
+          document.body.classList.remove('scanner-active');
+        }
+
+        // Handle window resize for scanner
+        window.addEventListener('resize', () => {
+          const reader = document.getElementById('reader');
+          if (reader) {
+            reader.style.height = '300px';
+          }
+        });
+
+        // Close scanner when clicking outside
+        document.querySelector('.scanner-overlay').addEventListener('click', (e) => {
+          if (e.target.classList.contains('scanner-overlay')) {
+            stopScanner();
+          }
+        });
+      </script>
+</body>
+
+</html>

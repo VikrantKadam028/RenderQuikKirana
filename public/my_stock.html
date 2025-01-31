@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Inventory</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+    />
+    <style>
+      :root {
+        --gradient-start: #006d87;
+        --gradient-end: #004757;
+        --text-light: #ffffff;
+        --text-dark: #1a1a1a;
+        --text-gray: #666666;
+        --card-bg: #ffffff;
+        --tab-active: #ffffff;
+        --tab-inactive: rgba(255, 255, 255, 0.7);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        background: linear-gradient(
+          135deg,
+          var(--gradient-start),
+          var(--gradient-end)
+        );
+        min-height: 100vh;
+      }
+
+      .header {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--text-light);
+      }
+
+      .back-button {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+
+      .menu-button {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+
+      .title {
+        font-size: 1.25rem;
+        font-weight: 500;
+      }
+
+      .tabs {
+        display: flex;
+        padding: 0 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .tab {
+        padding: 1rem;
+        color: var(--tab-inactive);
+        cursor: pointer;
+        position: relative;
+        text-decoration: none;
+      }
+
+      .tab.active {
+        color: var(--tab-active);
+      }
+
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--tab-active);
+      }
+
+      .tab-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: white;
+        color: var(--text-dark);
+        border-radius: 50%;
+        margin-left: 0.5rem;
+      }
+
+      .search-container {
+        padding: 1rem;
+      }
+
+      .search-bar {
+        display: flex;
+        align-items: center;
+        background: var(--card-bg);
+        padding: 0.75rem;
+        border-radius: 8px;
+      }
+
+      .search-bar input {
+        border: none;
+        outline: none;
+        width: 100%;
+        margin-left: 0.5rem;
+        font-size: 1rem;
+      }
+
+      .inventory-list {
+        padding: 1rem;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .inventory-item {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .item-image {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+      }
+
+      .item-details h3 {
+        font-size: 1rem;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+      }
+
+      .item-details p {
+        color: var(--text-gray);
+        font-size: 0.875rem;
+      }
+
+      .fab {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #1a2942;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      @media (min-width: 768px) {
+        .inventory-list {
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <button
+        class="back-button"
+        onclick="window.location.href='dashboard.html'"
+      >
+        ←
+      </button>
+      <h1 class="title">My Inventory/ स्टॉक जानकारी</h1>
+      <button class="menu-button">⋮</button>
+    </header>
+
+    <nav class="tabs">
+      <a href="#all" class="tab active"
+        >All Stocks <span class="tab-count" id="allCount">0</span></a
+      >
+      <!-- <a href="#low" class="tab">Low Stock <span class="tab-count" id="lowCount">0</span></a>
+    <a href="#archived" class="tab">Archived</a> -->
+    </nav>
+
+    <div class="search-container">
+      <div class="search-bar">
+        <input type="text" placeholder="Search" id="searchInput" />
+      </div>
+    </div>
+
+    <div class="inventory-list" id="inventoryList">
+      <!-- Products will be dynamically inserted here -->
+    </div>
+
+    <button class="fab" onclick="window.location.href='add-product.html'">+</button>
+
+    <script>
+      // Function to get user's shop ID from localStorage or another source
+      function getShopId() {
+        // Replace this with your actual method of storing/retrieving the shop ID
+        return localStorage.getItem("shopId");
+      }
+
+      // Function to fetch products
+      async function fetchProducts() {
+        try {
+          const shopId = getShopId();
+          if (!shopId) {
+            throw new Error("Shop ID not found");
+          }
+
+          const response = await fetch(`/products/${shopId}`);
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.message);
+          }
+
+          return data.products;
+        } catch (error) {
+          console.error("Error fetching products:", error);
+          return [];
+        }
+      }
+
+      // Function to render products
+      // function renderProducts(products) {
+      //     const inventoryList = document.getElementById('inventoryList');
+      //     inventoryList.innerHTML = '';
+
+      //     let allCount = 0;
+      //     let lowCount = 0;
+
+      //     products.forEach((product, index) => {
+      //         allCount++;
+      //         if (product.quantity <= 5) lowCount++; // Assuming 5 is the low stock threshold
+
+      //         const itemHtml = `
+      //             <div class="inventory-item">
+      //                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYaoYfMAG3k2mzseNmXZIswXGwEyiZVk0eoQ&s" alt="${product.name}" class="item-image">
+      //                 <div class="item-details">
+      //                     <h3>(${index + 1}) ${product.name}</h3>
+      //                     <p>MRP: Rs. ${product.mrp} Quantity: ${product.quantity} ${product.unit}</p>
+      //                 </div>
+      //             </div>
+      //         `;
+      //         inventoryList.innerHTML += itemHtml;
+      //     });
+
+      //     // Update counts
+      //     document.getElementById('allCount').textContent = allCount;
+      //     // document.getElementById('lowCount').textContent = lowCount;
+      // }
+
+      // First, modify the product rendering function in my_stock.html to make items clickable:
+      function renderProducts(products) {
+        const inventoryList = document.getElementById("inventoryList");
+        inventoryList.innerHTML = "";
+
+        let allCount = 0;
+        let lowCount = 0;
+
+        products.forEach((product, index) => {
+          allCount++;
+          if (product.quantity <= 5) lowCount++;
+
+          const itemHtml = `
+            <div class="inventory-item" onclick="editProduct('${product._id}')">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYaoYfMAG3k2mzseNmXZIswXGwEyiZVk0eoQ&s" alt="${
+                  product.name
+                }" class="item-image">
+                <div class="item-details">
+                    <h3>(${index + 1}) ${product.name}</h3>
+                    <p>MRP: Rs. ${product.mrp} Quantity: ${product.quantity} ${
+            product.unit
+          }</p>
+                </div>
+            </div>
+        `;
+          inventoryList.innerHTML += itemHtml;
+        });
+
+        document.getElementById("allCount").textContent = allCount;
+        document.getElementById("lowCount").textContent = lowCount;
+      }
+
+      // Add the editProduct function to handle clicks:
+      function editProduct(productId) {
+        // Store the product ID for retrieval on the edit page
+        localStorage.setItem("editProductId", productId);
+        window.location.href = "add-product.html";
+      }
+
+      // Function to filter products
+      function filterProducts(products, searchTerm) {
+        return products.filter(
+          (product) =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            product.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      // Initialize page
+      let allProducts = [];
+
+      async function initializePage() {
+        allProducts = await fetchProducts();
+        renderProducts(allProducts);
+
+        // Search functionality
+        const searchInput = document.getElementById("searchInput");
+        searchInput.addEventListener("input", (e) => {
+          const filtered = filterProducts(allProducts, e.target.value);
+          renderProducts(filtered);
+        });
+
+        // Tab switching functionality
+        const tabs = document.querySelectorAll(".tab");
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", (e) => {
+            e.preventDefault();
+            tabs.forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+
+            const tabId = tab.getAttribute("href").substring(1);
+            let filteredProducts = allProducts;
+
+            if (tabId === "low") {
+              filteredProducts = allProducts.filter(
+                (product) => product.quantity <= 5
+              );
+            } else if (tabId === "archived") {
+              filteredProducts = []; // Implement archived products logic if needed
+            }
+
+            renderProducts(filteredProducts);
+          });
+        });
+      }
+
+      // Start the application
+      document.addEventListener("DOMContentLoaded", initializePage);
+    </script>
+  </body>
+</html>
