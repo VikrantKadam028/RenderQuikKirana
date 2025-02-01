@@ -505,6 +505,7 @@
                     shopUrlElement.textContent = generatedUrl;
                     shopUrlElement.href = generatedUrl; // Make it clickable
                     shopUrlElement.setAttribute("target", "_blank"); // Open in new tab
+                    shopUrlElement.setAttribute("rel", "noopener noreferrer"); // Improve security
                   }
                 }
               } else {
@@ -519,14 +520,21 @@
         .getElementById("phoneNumber")
         .addEventListener("input", function () {
           let value = this.value.replace(/\D/g, "");
-          if (value.length > 10) value = value.slice(0, 10);
+          if (value.length > 13) value = value.slice(0, 10);
           this.value = value;
-          document.querySelector(".counter").textContent = `${value.length}/10`;
+          document.querySelector(".counter").textContent = `${value.length}/13`;
 
           // Update URL if store is online
           if (document.getElementById("onlineStoreToggle").checked) {
-            const generatedUrl = `billingfast.com/shop/${value}`;
-            document.getElementById("shopUrl").textContent = generatedUrl;
+            const generatedUrl = `https://renderquikkirana.onrender.com/ActualStore.html?phone=${value}`;
+            const shopUrlElement = document.getElementById("shopUrl");
+
+            if (shopUrlElement) {
+              shopUrlElement.textContent = generatedUrl;
+              shopUrlElement.href = generatedUrl; // Make it clickable
+              shopUrlElement.setAttribute("target", "_blank"); // Open in new tab
+              shopUrlElement.setAttribute("rel", "noopener noreferrer"); // Improve security
+            }
           }
         });
 
