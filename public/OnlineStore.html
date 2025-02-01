@@ -179,13 +179,14 @@
         background: white;
         border: 1px solid var(--border-color);
         border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       }
 
       .url {
         color: var(--primary-color);
         font-size: 15px;
+        text-decoration: none;
         word-break: break-all;
+        cursor: pointer;
       }
 
       .url-actions {
@@ -270,7 +271,7 @@
         font-size: 16px;
         cursor: pointer;
         transition: background-color 0.3s;
-        margin-top: 24px;
+        /* margin-top: 24px; */
       }
 
       .update-btn:disabled {
@@ -342,6 +343,7 @@
         <div class="url-section" id="urlSection" style="display: none">
           <h3>Online Shop URL -</h3>
           <div class="url-box">
+            <a href="#" class="url" id="shopUrl" target="_blank"></a>
             <span class="url" id="shopUrl"></span>
             <div class="url-actions">
               <button class="icon-btn" id="copyBtn">
@@ -476,27 +478,38 @@
       document
         .getElementById("onlineStoreToggle")
         .addEventListener("change", function () {
+          const phoneNumber =
+            localStorage.getItem("PhoneNumber") ||
+            document.getElementById("phoneNumber")?.value ||
+            "defaultNumber"; // Fallback to default if missing
+
           const contentSections = [
             "urlSection",
             "deliveryOption",
             "phoneInput",
             "noteForCustomers",
           ];
-          const phoneNumber =
-            localStorage.getItem("PhoneNumber") ||
-            document.getElementById("phoneNumber").value;
 
           contentSections.forEach((sectionId) => {
             const section = document.getElementById(sectionId);
-            if (this.checked) {
-              section.style.display = "block";
-              // Generate and set URL
-              if (sectionId === "urlSection") {
-                const generatedUrl = `billingfast.com/shop/${phoneNumber}`;
-                document.getElementById("shopUrl").textContent = generatedUrl;
+            if (section) {
+              if (this.checked) {
+                section.style.display = "block";
+
+                // Generate and set URL for urlSection
+                if (sectionId === "urlSection") {
+                  const generatedUrl = `/ActualStore.html?phone=${phoneNumber}`;
+                  const shopUrlElement = document.getElementById("shopUrl");
+
+                  if (shopUrlElement) {
+                    shopUrlElement.textContent = generatedUrl;
+                    shopUrlElement.href = generatedUrl; // Make it clickable
+                    shopUrlElement.setAttribute("target", "_blank"); // Open in new tab
+                  }
+                }
+              } else {
+                section.style.display = "none";
               }
-            } else {
-              section.style.display = "none";
             }
           });
         });
