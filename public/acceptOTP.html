@@ -240,8 +240,8 @@
               if (data.success) {
                 messageDisplay.textContent = "OTP verified successfully!";
                 messageDisplay.classList.add("success");
-                localStorage.setItem("PhoneNumber",phoneNumber);
-                localStorage.setItem('shopId', data.userId);
+                localStorage.setItem("PhoneNumber", phoneNumber);
+                localStorage.setItem("shopId", data.userId);
 
                 setTimeout(() => {
                   window.location.href = "name_shopname.html";
