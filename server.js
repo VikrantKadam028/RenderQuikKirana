@@ -4,13 +4,17 @@ const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
 const User = require("./models/User");
+const Product = require("./models/Product");
+
+// Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
-const Product = require("./models/Product");
 
+// Initialize Express app
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -25,24 +29,14 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+// OTP Storage and Configuration
 const otpStore = {};
 const OTP_EXPIRY_TIME = 2 * 60 * 1000; // 2 minutes
 
-// Helper functions
+// Helper Functions
 const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
-
-app.use((req, res, next) => {
-  if (req.url.endsWith(".css")) {
-    res.type("text/css");
-  } else if (req.url.endsWith(".js")) {
-    res.type("application/javascript");
-  } else if (req.url.endsWith(".json")) {
-    res.type("application/json");
-  }
-  next();
-});
 
 const sendSMS = async (toNumber, body) => {
   const msgOptions = {
@@ -60,11 +54,23 @@ const sendSMS = async (toNumber, body) => {
   }
 };
 
-// New route to update user profile
+// Content-Type middleware
+app.use((req, res, next) => {
+  if (req.url.endsWith(".css")) {
+    res.type("text/css");
+  } else if (req.url.endsWith(".js")) {
+    res.type("application/javascript");
+  } else if (req.url.endsWith(".json")) {
+    res.type("application/json");
+  }
+  next();
+});
+
+// Routes
+
+// Update user profile
 app.post("/update-profile", async (req, res) => {
   const { phoneNumber, username, shopName, profilePicture } = req.body;
-
-  console.log("Received phone number:", phoneNumber);
 
   if (!phoneNumber) {
     return res.status(400).json({
@@ -74,24 +80,15 @@ app.post("/update-profile", async (req, res) => {
   }
 
   try {
-    // Log all users in the database
-    const allUsers = await User.find({});
-    console.log("All users in database:", allUsers);
-
-    // Find user with phone number
     const user = await User.findOne({ phoneNumber });
-    console.log("Found user:", user);
 
     if (!user) {
-      // Try finding with different formats
-      const formattedNumber = phoneNumber.replace(/\D/g, ""); // Remove non-digits
-      console.log("Trying formatted number:", formattedNumber);
+      const formattedNumber = phoneNumber.replace(/\D/g, "");
       const userWithFormattedNumber = await User.findOne({
         phoneNumber: formattedNumber,
       });
 
       if (userWithFormattedNumber) {
-        // Update and save user
         userWithFormattedNumber.username = username;
         userWithFormattedNumber.shopName = shopName;
         userWithFormattedNumber.profilePicture = profilePicture;
@@ -106,17 +103,13 @@ app.post("/update-profile", async (req, res) => {
 
       return res.status(404).json({
         success: false,
-        message:
-          "User not found. Debug info: " +
-          `Tried phone numbers: ${phoneNumber} and ${formattedNumber}`,
+        message: "User not found",
       });
     }
 
-    // Update user profile
     user.username = username;
     user.shopName = shopName;
     user.profilePicture = profilePicture;
-
     await user.save();
 
     res.status(200).json({
@@ -128,28 +121,31 @@ app.post("/update-profile", async (req, res) => {
     console.error("Error updating profile:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to update profile: " + error.message,
+      message: "Failed to update profile",
+      error: error.message,
     });
   }
 });
 
-// Fetch user details from the database
+// Get user details
 app.post("/get-user", async (req, res) => {
   const { phoneNumber } = req.body;
 
   if (!phoneNumber) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Phone number is required" });
+    return res.status(400).json({
+      success: false,
+      message: "Phone number is required",
+    });
   }
 
   try {
     const user = await User.findOne({ phoneNumber });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
     res.status(200).json({
@@ -162,60 +158,69 @@ app.post("/get-user", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching user details:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch user details" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user details",
+    });
   }
 });
 
-
-
+// Add product
 app.post("/add-product", async (req, res) => {
   try {
-    const { shopId, name, quantity, unit, barcode, mrp, retailPrice, wholesalePrice, includingGst, discount } = req.body;
-    
-    // Validate shopId format
+    const {
+      shopId,
+      name,
+      quantity,
+      unit,
+      barcode,
+      mrp,
+      retailPrice,
+      wholesalePrice,
+      includingGst,
+      discount,
+    } = req.body;
+
     if (!mongoose.Types.ObjectId.isValid(shopId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid shop ID format" 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shop ID format",
       });
     }
 
-    // Check if shop/user exists
     const shop = await User.findById(shopId);
     if (!shop) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Shop not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Shop not found",
       });
     }
 
-    // Validate required fields
-    if (!name || !quantity || !unit || !mrp || !retailPrice || !wholesalePrice) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Missing required fields" 
+    if (
+      !name ||
+      !quantity ||
+      !unit ||
+      !mrp ||
+      !retailPrice ||
+      !wholesalePrice
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
       });
     }
 
-    // Validate numeric fields
-    if (quantity < 0 || mrp < 0 || retailPrice < 0 || wholesalePrice < 0 || discount < 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Numeric values cannot be negative" 
+    if (
+      quantity < 0 ||
+      mrp < 0 ||
+      retailPrice < 0 ||
+      wholesalePrice < 0 ||
+      discount < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Numeric values cannot be negative",
       });
-    }
-
-    // Check if barcode already exists (if provided)
-    if (barcode) {
-      const existingProduct = await Product.findOne({ barcode });
-      if (existingProduct) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Product with this barcode already exists" 
-        });
-      }
     }
 
     const newProduct = new Product({
@@ -240,116 +245,142 @@ app.post("/add-product", async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding product:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Failed to add product", 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: "Failed to add product",
+      error: error.message,
     });
   }
 });
 
-// // Add a route to get products for a specific shop
-// app.get("/products/:shopId", async (req, res) => {
-//   try {
-//     const { shopId } = req.params;
-
-//     if (!mongoose.Types.ObjectId.isValid(shopId)) {
-//       return res.status(400).json({ 
-//         success: false, 
-//         message: "Invalid shop ID format" 
-//       });
-//     }
-
-//     const products = await Product.find({ shopId }).sort({ createdAt: -1 });
-    
-//     res.status(200).json({
-//       success: true,
-//       products
-//     });
-//   } catch (error) {
-//     console.error("Error fetching products:", error);
-//     res.status(500).json({ 
-//       success: false, 
-//       message: "Failed to fetch products", 
-//       error: error.message 
-//     });
-//   }
-// });
-// Get single product by ID
-app.get("/products/:productId", async (req, res) => {
+// Get all products for a shop
+app.get("/products/shop/:shopId", async (req, res) => {
   try {
-      const { productId } = req.params;
-      
-      if (!mongoose.Types.ObjectId.isValid(productId)) {
-          return res.status(400).json({
-              success: false,
-              message: "Invalid product ID format"
-          });
-      }
-      
-      const product = await Product.findById(productId);
-      
-      if (!product) {
-          return res.status(404).json({
-              success: false,
-              message: "Product not found"
-          });
-      }
-      
-      res.status(200).json({
-          success: true,
-          product
+    const { shopId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(shopId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shop ID format",
       });
+    }
+
+    const products = await Product.find({ shopId }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      products,
+    });
   } catch (error) {
-      console.error("Error fetching product:", error);
-      res.status(500).json({
-          success: false,
-          message: "Failed to fetch product",
-          error: error.message
+    console.error("Error fetching products:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch products",
+      error: error.message,
+    });
+  }
+});
+
+// Get single product
+app.get("/products/single/:productId", async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
       });
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      product,
+    });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch product",
+      error: error.message,
+    });
   }
 });
 
 // Update product
 app.put("/products/:productId", async (req, res) => {
   try {
-      const { productId } = req.params;
-      
-      if (!mongoose.Types.ObjectId.isValid(productId)) {
-          return res.status(400).json({
-              success: false,
-              message: "Invalid product ID format"
-          });
-      }
-      
-      const updatedProduct = await Product.findByIdAndUpdate(
-          productId,
-          req.body,
-          { new: true, runValidators: true }
-      );
-      
-      if (!updatedProduct) {
-          return res.status(404).json({
-              success: false,
-              message: "Product not found"
-          });
-      }
-      
-      res.status(200).json({
-          success: true,
-          product: updatedProduct
+    const { productId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
       });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      product: updatedProduct,
+    });
   } catch (error) {
-      console.error("Error updating product:", error);
-      res.status(500).json({
-          success: false,
-          message: "Failed to update product",
-          error: error.message
-      });
+    console.error("Error updating product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update product",
+      error: error.message,
+    });
+  }
+});
+
+app.delete("/products/:productId", async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: "Invalid product ID" });
+    }
+
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+
+    if (!deletedProduct) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Product deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ success: false, message: "Failed to delete product" });
   }
 });
 
 
+
+
+
+// Send OTP
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
 
@@ -383,7 +414,6 @@ app.post("/send-otp", async (req, res) => {
         isVerified: false,
       });
       await user.save();
-      console.log("New user added:", user);
     }
 
     await sendSMS(number, `Your OTP is: ${otp}`);
@@ -394,9 +424,9 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
+// Verify OTP
 app.post("/verify-otp", async (req, res) => {
   const { number, otp } = req.body;
-  console.log("Verifying OTP:", number, otp);
 
   if (otpStore[number] && otpStore[number].otp === otp) {
     if (Date.now() - otpStore[number].timestamp < OTP_EXPIRY_TIME) {
@@ -416,8 +446,7 @@ app.post("/verify-otp", async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "OTP verified successfully!",
-        user: user._id,
-          
+        userId: user._id,
       });
     } else {
       delete otpStore[number];
@@ -434,6 +463,7 @@ app.post("/verify-otp", async (req, res) => {
   }
 });
 
+// Reset OTP
 app.post("/reset-otp", (req, res) => {
   const { number } = req.body;
 
@@ -447,10 +477,12 @@ app.post("/reset-otp", (req, res) => {
   });
 });
 
+// Serve static files
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
