@@ -390,82 +390,9 @@
       </div>
 
       <script>
-
-
-        // document.addEventListener("DOMContentLoaded", () => {
-        //   document.querySelector(".btn-save").addEventListener("click", async () => {
-        //     const shopId = localStorage.getItem("shopId");
-
-        //     // Ensure the shopId is available
-        //     if (!shopId) {
-        //       alert("User is not logged in. Please log in first.");
-        //       return;
-        //     }
-
-        //     // Select elements and check if they exist
-        //     const nameInput = document.querySelector(".input-field");
-        //     const quantityInput = document.querySelector(".quantity-container input");
-        //     const unitSelect = document.querySelector(".quantity-container select");
-        //     const barcodeInput = document.getElementById("barcodeInput");
-        //     const mrpInput = document.getElementById("mrpInput");
-        //     const retailInput = document.getElementById("InputRetail");
-        //     const wholesaleInput = document.getElementById("InputWholesale");
-        //     const includingGstCheckbox = document.getElementById("including-gst");
-        //     const discountInput = document.querySelector(".discount-input");
-
-        //     // Check if any of the elements are null
-        //     // if (!nameInput || !quantityInput || !unitSelect || !mrpInput || !retailInput || !wholesaleInput) {
-        //     //   console.error("One or more input fields are missing in the DOM.");
-        //     //   alert("Please fill out all fields before saving.");
-        //     //   return;
-        //     // }
-
-        //     // Get values safely
-        //     const name = nameInput.value.trim();
-        //     const quantity = parseInt(quantityInput.value) || 0;
-        //     const unit = unitSelect.value;
-        //     const barcode = barcodeInput ? barcodeInput.value.trim() : "";
-        //     const mrp = parseFloat(mrpInput.value) || 0;
-        //     const retailPrice = parseFloat(retailInput.value) || 0;
-        //     const wholesalePrice = parseFloat(wholesaleInput.value) || 0;
-        //     const includingGst = includingGstCheckbox ? includingGstCheckbox.checked : false;
-        //     const discount = parseFloat(discountInput ? discountInput.value : "0") || 0;
-
-        //     // Validate input values
-        //     if (!name || quantity <= 0 || mrp <= 0 || retailPrice <= 0 || wholesalePrice <= 0) {
-        //       alert("Please enter valid product details.");
-        //       return;
-        //     }
-
-        //     const productData = { shopId, name, quantity, unit, barcode, mrp, retailPrice, wholesalePrice, includingGst, discount };
-
-        //     try {
-        //       const response = await fetch("http://localhost:3000/add-product", {
-        //         method: "POST",
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify(productData),
-        //       });
-
-        //       const data = await response.json();
-        //       if (data.success) {
-        //         alert("Product added successfully!");
-        //         window.location.reload();
-        //       } else {
-        //         alert("Error: " + data.message);
-        //       }
-        //     } catch (error) {
-        //       console.error("Failed to add product:", error);
-        //       alert("Server error. Please try again later.");
-        //     }
-        //   });
-        // });
-
-        // Add this script to add-product.html just before the closing </body> tag:
-
-        // Function to fetch product details
         async function fetchProductDetails(productId) {
           try {
-            const response = await fetch(`/products/${productId}`);
+            const response = await fetch(`/products/single/${productId}`);
             const data = await response.json();
 
             if (data.success) {
