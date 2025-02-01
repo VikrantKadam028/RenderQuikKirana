@@ -358,25 +358,102 @@ app.put("/products/:productId", async (req, res) => {
 app.delete("/products/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: "Invalid product ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid product ID" });
     }
 
     const deletedProduct = await Product.findByIdAndDelete(productId);
 
     if (!deletedProduct) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
-    res.status(200).json({ success: true, message: "Product deleted successfully!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Product deleted successfully!" });
   } catch (error) {
     console.error("Error deleting product:", error);
-    res.status(500).json({ success: false, message: "Failed to delete product" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete product" });
   }
 });
 
 
+
+
+app.post("/scan-product", async (req, res) => {
+  try {
+    const { shopId, barcode, quantity } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(shopId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid shop ID format",
+      });
+    }
+
+    const product = await Product.findOne({ shopId, barcode });
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    if (product.quantity < quantity) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient stock! Only ${product.quantity} left.`,
+      });
+    }
+
+    product.quantity -= quantity;
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      product,
+    });
+  } catch (error) {
+    console.error("Error scanning product:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to scan product",
+      error: error.message,
+    });
+  }
+});
+app.post("/update-stock", async (req, res) => {
+  const { shopId, barcode, quantity } = req.body;
+
+  try {
+    const product = await Product.findOne({ shopId, barcode });
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    if (product.quantity < quantity) {
+      return res.status(400).json({ success: false, message: "Insufficient stock" });
+    }
+
+    product.quantity -= quantity;
+    await product.save();
+
+    res.status(200).json({ success: true, message: "Stock updated successfully" });
+  } catch (error) {
+    console.error("Error updating stock:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
 
