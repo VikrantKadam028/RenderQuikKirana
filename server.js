@@ -5,7 +5,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const Product = require("./models/Product");
-
+const Order = require("./models/Order");
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -384,78 +384,68 @@ app.delete("/products/:productId", async (req, res) => {
   }
 });
 
+app.post("/place-order", async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-
-
-app.post("/scan-product", async (req, res) => {
   try {
-    const { shopId, barcode, quantity } = req.body;
+    const { items, customerDetails, paymentMode } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(shopId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid shop ID format",
-      });
+    // Validate order items and update inventory
+    for (const item of items) {
+      const product = await Product.findById(item._id).session(session);
+
+      if (!product) {
+        throw new Error(`Product ${item.name} not found`);
+      }
+
+      if (product.quantity < item.quantity) {
+        throw new Error(`Insufficient quantity for ${item.name}`);
+      }
+
+      // Update product quantity
+      product.quantity -= item.quantity;
+      await product.save({ session });
     }
 
-    const product = await Product.findOne({ shopId, barcode });
+    // Calculate total amount
+    const totalAmount = items.reduce(
+      (sum, item) => sum + item.retailPrice * item.quantity,
+      0
+    );
 
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
+    // Create new order
+    const order = new Order({
+      customerDetails,
+      items: items.map((item) => ({
+        productId: item._id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.retailPrice,
+      })),
+      totalAmount,
+      paymentMode,
+    });
 
-    if (product.quantity < quantity) {
-      return res.status(400).json({
-        success: false,
-        message: `Insufficient stock! Only ${product.quantity} left.`,
-      });
-    }
-
-    product.quantity -= quantity;
-    await product.save();
+    await order.save({ session });
+    await session.commitTransaction();
 
     res.status(200).json({
       success: true,
-      message: "Product updated successfully",
-      product,
+      message: "Order placed successfully",
+      orderId: order._id,
     });
   } catch (error) {
-    console.error("Error scanning product:", error);
-    res.status(500).json({
+    await session.abortTransaction();
+    console.error("Error processing order:", error);
+    res.status(400).json({
       success: false,
-      message: "Failed to scan product",
-      error: error.message,
+      message: error.message || "Failed to process order",
     });
+  } finally {
+    session.endSession();
   }
 });
-app.post("/update-stock", async (req, res) => {
-  const { shopId, barcode, quantity } = req.body;
-
-  try {
-    const product = await Product.findOne({ shopId, barcode });
-
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
-    }
-
-    if (product.quantity < quantity) {
-      return res.status(400).json({ success: false, message: "Insufficient stock" });
-    }
-
-    product.quantity -= quantity;
-    await product.save();
-
-    res.status(200).json({ success: true, message: "Stock updated successfully" });
-  } catch (error) {
-    console.error("Error updating stock:", error);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
-
 
 // Send OTP
 app.post("/send-otp", async (req, res) => {
