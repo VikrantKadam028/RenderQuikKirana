@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cart Page</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      .header {
+        background: #2845b3;
+        color: white;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .back-btn {
+        color: white;
+        font-size: 24px;
+        text-decoration: none;
+        padding: 10px;
+      }
+
+      .add-more-btn {
+        background: #e8eeff;
+        color: black;
+        padding: 8px 16px;
+        border-radius: 5px;
+        text-decoration: none;
+      }
+
+      .container {
+        padding: 20px;
+        background: #f5f5f5;
+        min-height: 100vh;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      .cart-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+      }
+
+      .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        margin-right: 15px;
+      }
+
+      .item-details {
+        flex: 1;
+      }
+
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        background: #2845b3;
+        border-radius: 5px;
+        padding: 5px;
+        color: white;
+      }
+
+      .quantity-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        padding: 0 10px;
+        cursor: pointer;
+      }
+
+      .quantity {
+        padding: 0 15px;
+      }
+
+      .price {
+        font-size: 18px;
+        font-weight: bold;
+        /* margin-left: 15px; */
+        margin-bottom: 8px;
+        color: #4caf50;
+      }
+      .price-quantity {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .total-section {
+        background: #e8eeff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+
+      .delivery-details {
+        margin-top: 20px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+
+      select {
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 90px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        background: white;
+      }
+
+      .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .place-order-btn {
+        background: #2845b3;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      @media (max-width: 480px) {
+        .header {
+          padding: 10px;
+        }
+
+        .container {
+          padding: 15px;
+        }
+
+        .cart-item {
+          padding: 8px;
+        }
+
+        .item-image {
+          width: 60px;
+          height: 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <a href="#" class="back-btn">←</a>
+      <h2>Cart</h2>
+      <a href="#" class="add-more-btn">Add More</a>
+    </div>
+
+    <div class="container">
+      <h1>Order Summary</h1>
+
+      <div class="cart-item">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2025_0202_134124.jpg-dA8P6LOgKcTybWQlLN3W9hX8UUttkt.jpeg"
+          alt="Classmate Notebook"
+          class="item-image"
+        />
+        <div class="item-details">
+          <h3>Classmate Notebook</h3>
+          <p>1 pcs (172 Pages)</p>
+        </div>
+        <div class="quantity-controls">
+          <button class="quantity-btn minus">-</button>
+          <span class="quantity">1</span>
+          <button class="quantity-btn plus">+</button>
+        </div>
+        <span class="price">₹62</span>
+      </div>
+
+      <div class="cart-item">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2025_0202_134124.jpg-dA8P6LOgKcTybWQlLN3W9hX8UUttkt.jpeg"
+          alt="Maggie"
+          class="item-image"
+        />
+        <div class="item-details">
+          <h3>Maggie 2 Minutes Noodles</h3>
+          <p>1 pcs</p>
+        </div>
+        <div class="quantity-controls">
+          <button class="quantity-btn minus">-</button>
+          <span class="quantity">1</span>
+          <button class="quantity-btn plus">+</button>
+        </div>
+        <span class="price">₹14</span>
+      </div>
+
+      <div class="total-section">
+        <div style="display: flex; justify-content: space-between">
+          <span>Item Total</span>
+          <span>₹76</span>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+          "
+        >
+          <strong>To Pay</strong>
+          <strong>₹76</strong>
+        </div>
+      </div>
+
+      <div class="delivery-details">
+        <h2>Delivery Details</h2>
+        <input type="text" placeholder="Name" />
+        <input type="tel" placeholder="Phone Number" />
+        <textarea placeholder="Address" rows="3"></textarea>
+        <textarea placeholder="Any Message?" rows="3"></textarea>
+
+        <h2>Choose Payment Mode</h2>
+        <select>
+          <option>Cash On Delivery</option>
+          <option>Pick Up</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div>
+        <div>To Pay</div>
+        <strong>₹76</strong>
+      </div>
+      <button class="place-order-btn">Place Order</button>
+    </div>
+
+    <script>
+      // Initialize variables
+      let cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+      let total = 0;
+
+      // Display cart items
+      function displayCartItems() {
+        const cartContainer = document.querySelector(".container");
+        const existingItems = document.querySelectorAll(".cart-item");
+        existingItems.forEach((item) => item.remove());
+
+        total = 0;
+
+        if (cartItems.length === 0) {
+          const emptyCart = document.createElement("div");
+          emptyCart.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <h2>Your cart is empty</h2>
+                    <p>Add items to your cart to continue shopping</p>
+                </div>
+            `;
+          cartContainer.insertBefore(
+            emptyCart,
+            document.querySelector(".total-section")
+          );
+          updateTotals(0);
+          return;
+        }
+
+        const itemsContainer = document.createElement("div");
+
+        cartItems.forEach((item, index) => {
+          const itemTotal = item.retailPrice * (item.quantity || 1);
+          total += itemTotal;
+
+          const itemElement = document.createElement("div");
+          itemElement.className = "cart-item";
+          itemElement.innerHTML = `
+                <div class="item-details">
+                    <h3>${item.name}</h3>
+                    <p>₹${item.retailPrice} per item</p>
+                </div>
+                <div class="price-quantity">
+                    <span class="price">₹ ${itemTotal}</span>
+                <div class="quantity-controls">
+                    <button class="quantity-btn minus" onclick="updateQuantity(${index}, -1)">-</button>
+                    <span class="quantity">${item.quantity || 1}</span>
+                    <button class="quantity-btn plus" onclick="updateQuantity(${index}, 1)">+</button>
+                    
+                </div>
+                
+                </div>
+
+                
+            `;
+          itemsContainer.appendChild(itemElement);
+        });
+
+        cartContainer.insertBefore(
+          itemsContainer,
+          document.querySelector(".total-section")
+        );
+        updateTotals(total);
+      }
+
+      // Update item quantity
+      function updateQuantity(index, change) {
+        const item = cartItems[index];
+        const newQuantity = (item.quantity || 1) + change;
+
+        if (newQuantity > 0) {
+          item.quantity = newQuantity;
+          localStorage.setItem("cart", JSON.stringify(cartItems));
+          displayCartItems();
+        } else if (newQuantity === 0) {
+          cartItems.splice(index, 1);
+          localStorage.setItem("cart", JSON.stringify(cartItems));
+          displayCartItems();
+        }
+      }
+      // Update total amounts
+      function updateTotals(total) {
+        // Update the "Item Total" section
+        document.querySelector(
+          ".total-section div:first-child span:last-child"
+        ).textContent = `₹${total}`;
+
+        // Update the "To Pay" section
+        document.querySelector(
+          ".total-section div:last-child strong:last-child"
+        ).textContent = `₹${total}`;
+        document.querySelector(".bottom-bar strong").textContent = `₹${total}`;
+      }
+
+      // Handle order placement
+      function placeOrder() {
+        const name = document.querySelector('input[placeholder="Name"]').value;
+        const phone = document.querySelector(
+          'input[placeholder="Phone Number"]'
+        ).value;
+        const address = document.querySelector(
+          'textarea[placeholder="Address"]'
+        ).value;
+        const message = document.querySelector(
+          'textarea[placeholder="Any Message?"]'
+        ).value;
+        const paymentMode = document.querySelector("select").value;
+
+        if (!name || !phone || !address) {
+          alert("Please fill in all required fields");
+          return;
+        }
+
+        // ✅ Save user details in localStorage
+        const userDetails = { name, phone, address, message };
+        localStorage.setItem("userDetails", JSON.stringify(userDetails));
+
+        fetch("/place-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: cartItems,
+            customerDetails: userDetails,
+            paymentMode,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              showOrderSuccess();
+              localStorage.removeItem("cart"); // Clear cart after placing order
+              setTimeout(() => {
+                window.location.href = "ActualStore.html";
+              }, 2000);
+            } else {
+              alert("Failed to place order: " + data.message);
+            }
+          })
+          .catch((error) => {
+            alert("Error placing order. Please try again.");
+            console.error("Error:", error);
+          });
+      }
+
+      function loadUserDetails() {
+        const savedUserDetails = JSON.parse(
+          localStorage.getItem("userDetails")
+        );
+        if (savedUserDetails) {
+          document.querySelector('input[placeholder="Name"]').value =
+            savedUserDetails.name || "";
+          document.querySelector('input[placeholder="Phone Number"]').value =
+            savedUserDetails.phone || "";
+          document.querySelector('textarea[placeholder="Address"]').value =
+            savedUserDetails.address || "";
+          document.querySelector('textarea[placeholder="Any Message?"]').value =
+            savedUserDetails.message || "";
+        }
+      }
+
+      // Call this function when the page loads
+      window.addEventListener("load", loadUserDetails);
+
+      // Show success message
+      function showOrderSuccess() {
+        const successPopup = document.createElement("div");
+        successPopup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+        `;
+        successPopup.innerHTML = `
+            <h2 style="color: #2845b3; margin-bottom: 10px;">Order Placed Successfully!</h2>
+            <p>Thank you for your order.</p>
+        `;
+        document.body.appendChild(successPopup);
+      }
+
+      // Event Listeners
+      document
+        .querySelector(".place-order-btn")
+        .addEventListener("click", placeOrder);
+      document.querySelector(".back-btn").addEventListener("click", () => {
+        window.location.href = "ActualStore.html";
+      });
+      document.querySelector(".add-more-btn").addEventListener("click", () => {
+        window.location.href = "ActualStore.html";
+      });
+
+      // Initialize cart display
+      displayCartItems();
+    </script>
+  </body>
+</html>
