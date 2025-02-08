@@ -15,15 +15,19 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZX93BPWK1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-7ZX93BPWK1"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-  gtag('config', 'G-7ZX93BPWK1');
-</script>
+      gtag("config", "G-7ZX93BPWK1");
+    </script>
     <style>
       * {
         box-sizing: border-box;
@@ -152,7 +156,8 @@
 
       .menu {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        /* grid-template-columns: 1fr 1fr; */
+        grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
         padding: 1rem;
         margin: 0 auto;
@@ -170,7 +175,8 @@
         flex-direction: column;
         background-color: #ffffff;
         border-radius: 0.5rem;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border: 0.1px solid grey;
+        /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
         cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s;
       }
@@ -181,14 +187,14 @@
       }
 
       .menu i {
-        font-size: 1.9rem;
+        font-size: 1.4rem;
         color: #1a73e8;
-        margin-bottom: 0.5rem;
+        /* margin-bottom: 0.5rem; */
       }
 
       .menu p {
         margin: 0.5rem 0 0;
-        font-size: 1rem;
+        font-size: 0.8rem;
       }
 
       .footer {
@@ -197,8 +203,8 @@
         padding: 0.8rem 0;
         color: white;
         background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-        border-top-left-radius: 30px;
-        border-top-right-radius: 30px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
         position: fixed;
         bottom: 0;
         width: 100%;
@@ -226,6 +232,12 @@
         color: grey;
       }
       .fa-file-invoice:before {
+        color: grey;
+      }
+      .fa-exclamation-triangle:before {
+        color: grey;
+      }
+      .fa-bullhorn:before {
         color: grey;
       }
 
@@ -256,7 +268,13 @@
           font-size: 1.2rem;
         }
         .button i {
-          font-size: 2.5rem;
+          font-size: 2rem;
+        }
+        .button {
+          padding: 1.2rem;
+        }
+        .button span {
+          font-size: 1rem;
         }
         .add-products {
           font-size: 1.2rem;
@@ -267,12 +285,19 @@
         .order p {
           font-size: 0.8rem;
         }
-        .menu {
-          grid-template-columns: 1fr 1fr;
+        .menu div {
+          /* grid-template-columns: 1fr 1fr; */
+          height: 80px;
+        }
+        .order.permanent-box {
+          height: 100px;
+        }
+        .image-content img {
+          width: 20px;
         }
       }
       .order.permanent-box {
-        display: flex;
+        /* display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 20px 30px;
@@ -282,11 +307,17 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         width: 90%;
         max-width: 600px;
-        margin: 10px auto;
+        margin: 10px auto; */
+        overflow: hidden;
+        position: relative;
+        padding: 16px 20px;
       }
 
       .text-content {
-        flex: 1;
+        width: 100%;
+      }
+      .box-title {
+        padding-right: 160px; /* Make space for buttons */
       }
 
       .text-content p {
@@ -333,6 +364,87 @@
 
       .settings-popup button:hover {
         background-color: #c0392b;
+      }
+      .url-container {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        padding: 4px 0;
+        margin-top: 4px;
+      }
+
+      .store-url {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        animation: slideText 15s linear infinite;
+        color: #2563eb;
+        text-decoration: underline;
+        cursor: pointer;
+        width: 100%;
+        font-size: 0.95rem;
+      }
+
+      @keyframes slideText {
+        0% {
+          transform: translateX(0%);
+        }
+        50% {
+          transform: translateX(calc(-50% + 150px));
+        }
+        100% {
+          transform: translateX(0%);
+        }
+      }
+
+      .url-buttons {
+        display: flex;
+        gap: 6px;
+        position: absolute;
+        top: 8px;
+        right: 12px;
+      }
+
+      .url-button {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+      }
+
+      .url-button i {
+        font-size: 14px;
+      }
+
+      .copy-btn {
+        border: 1px solid #e5e7eb;
+        color: #4b5563;
+        background-color: white;
+      }
+
+      .copy-btn:hover {
+        background-color: #f3f4f6;
+      }
+
+      .share-btn {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+      }
+
+      .share-btn:hover {
+        background-color: #1d4ed8;
+      }
+
+      .share-btn i,
+      .share-btn span {
+        color: white;
       }
     </style>
   </head>
@@ -387,7 +499,7 @@
         </div>
 
         <div>
-          <i class="fas fa-clipboard-list"></i>
+          <i class="fas fa-exclamation-triangle"></i>
           <p>Low Stocks</p>
         </div>
         <div>
@@ -398,10 +510,18 @@
           <i class="fas fa-file-invoice"></i>
           <p>Last Bills</p>
         </div>
+        <div>
+          <i class="fas fa-clipboard-list"></i>
+          <p>Orders</p>
+        </div>
+        <div>
+          <i class="fas fa-bullhorn"></i>
+          <p>Marketing</p>
+        </div>
       </div>
 
       <div class="footer">
-        <div>
+        <div id="homefooter">
           <i class="fas fa-home"></i>
           <p>Home</p>
         </div>
@@ -424,6 +544,80 @@
     </div>
 
     <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const permanentBox = document.querySelector(".order.permanent-box");
+        const storeSettings = JSON.parse(
+          localStorage.getItem("storeSettings") || "{}"
+        );
+        const phoneNumber = localStorage.getItem("PhoneNumber");
+
+        if (storeSettings.isOnline && phoneNumber) {
+          const storeUrl = `/ActualStore.html?phone=${phoneNumber}`;
+
+          // Update the permanent box content
+          permanentBox.innerHTML = `
+      <div class="text-content">
+        <p><strong>Your Online Store is Live!</strong></p>
+        <div class="url-container">
+          <a href="${storeUrl}" target="_blank" class="store-url">${storeUrl}</a>
+        </div>
+      </div>
+      <div class="url-buttons">
+        <button class="url-button copy-btn" onclick="copyStoreUrl('${storeUrl}')">Copy</button>
+        <button class="url-button share-btn" onclick="shareStoreUrl('${storeUrl}')">Share</button>
+      </div>
+    `;
+
+          // Stop animation on hover
+          const urlElement = permanentBox.querySelector(".store-url");
+          urlElement.addEventListener("mouseenter", () => {
+            urlElement.style.animationPlayState = "paused";
+          });
+          urlElement.addEventListener("mouseleave", () => {
+            urlElement.style.animationPlayState = "running";
+          });
+        }
+      });
+
+      function copyStoreUrl(url) {
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            const copyBtn = document.querySelector(".copy-btn");
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = "Copied!";
+            copyBtn.style.backgroundColor = "#34D399";
+            copyBtn.style.color = "white";
+            copyBtn.style.borderColor = "#34D399";
+
+            setTimeout(() => {
+              copyBtn.textContent = originalText;
+              copyBtn.style.backgroundColor = "";
+              copyBtn.style.color = "";
+              copyBtn.style.borderColor = "";
+            }, 2000);
+          })
+          .catch((err) => console.error("Failed to copy:", err));
+      }
+
+      async function shareStoreUrl(url) {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "Check out my online store!",
+              text: "Groceries at your doorstep, in one click.",
+              url: url,
+            });
+          } catch (err) {
+            if (err.name !== "AbortError") {
+              console.error("Error sharing:", err);
+            }
+          }
+        } else {
+          copyStoreUrl(url);
+        }
+      }
+
       document
         .getElementById("settingsButton")
         .addEventListener("click", function () {
