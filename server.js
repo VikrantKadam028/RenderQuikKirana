@@ -447,6 +447,16 @@ app.post("/place-order", async (req, res) => {
   }
 });
 
+app.get("/api/orders", async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ orderDate: -1 }); // Fetch latest orders first
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("❌ Error Fetching Orders:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch orders" });
+  }
+});
+
 // Send OTP
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
