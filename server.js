@@ -457,6 +457,57 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
+
+// Update order status
+app.put("/api/orders/:orderId/status", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID format"
+      });
+    }
+
+    const validStatuses = ['Pending', 'Processing', 'Delivered', 'Cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value"
+      });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update order status"
+    });
+  }
+});
+
+
+
 // Send OTP
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
