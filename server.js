@@ -457,7 +457,6 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
-
 // Update order status
 app.put("/api/orders/:orderId/status", async (req, res) => {
   try {
@@ -467,15 +466,15 @@ app.put("/api/orders/:orderId/status", async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid order ID format"
+        message: "Invalid order ID format",
       });
     }
 
-    const validStatuses = ['Pending', 'Processing', 'Delivered', 'Cancelled'];
+    const validStatuses = ["Pending", "Processing", "Delivered", "Cancelled"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid status value"
+        message: "Invalid status value",
       });
     }
 
@@ -488,25 +487,23 @@ app.put("/api/orders/:orderId/status", async (req, res) => {
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,
-        message: "Order not found"
+        message: "Order not found",
       });
     }
 
     res.status(200).json({
       success: true,
       message: "Order status updated successfully",
-      order: updatedOrder
+      order: updatedOrder,
     });
   } catch (error) {
     console.error("Error updating order status:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to update order status"
+      message: "Failed to update order status",
     });
   }
 });
-
-
 
 // Send OTP
 app.post("/send-otp", async (req, res) => {
