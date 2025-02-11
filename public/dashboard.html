@@ -494,7 +494,7 @@
           <p>My Stock</p>
         </div>
 
-        <div>
+        <div onclick="window.location.href='LowStock.html'">
           <i class="fas fa-exclamation-triangle"></i>
           <p>Low Stocks</p>
         </div>
@@ -510,7 +510,7 @@
           <i class="fas fa-clipboard-list"></i>
           <p>Orders</p>
         </div>
-        <div>
+        <div onclick="window.location.href='Marketing.html'">
           <i class="fas fa-bullhorn"></i>
           <p>Marketing</p>
         </div>
@@ -548,7 +548,7 @@
         const phoneNumber = localStorage.getItem("PhoneNumber");
 
         if (storeSettings.isOnline && phoneNumber) {
-          const storeUrl = `https://renderquikkirana.onrender.com/ActualStore.html?phone=${phoneNumber}`;
+          const storeUrl = `/ActualStore.html?phone=${phoneNumber}`;
 
           // Update the permanent box content
           permanentBox.innerHTML = `
