@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>QuikKirana | Marketing Cards</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        background-color: #f0f2f5;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: white;
+        text-align: center;
+        padding: 1rem;
+        position: relative;
+      }
+
+      .header h1{
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .back-button {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .card-designer {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .design-options {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 2rem;
+      }
+
+      .design-option {
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        border: 2px solid #2c5364;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+
+      .design-option:hover,
+      .design-option.active {
+        background-color: #2c5364;
+        color: white;
+      }
+
+      .card-preview {
+        width: 100%;
+        height: 400px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .card {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        color: white;
+        background-size: cover;
+        background-position: center;
+      }
+
+      .card-logo {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 1rem;
+      }
+
+      .card h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .card p {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      .btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background-color: #2c5364;
+        color: white;
+      }
+
+      .btn-secondary {
+        background-color: #e0e0e0;
+        color: #333;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .design-options {
+          flex-wrap: wrap;
+          gap: 1rem;
+        }
+
+        .card-preview {
+          height: 300px;
+        }
+
+        .card h2 {
+          font-size: 1.5rem;
+        }
+
+        .card p {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <button class="back-button" onclick="history.back()">←</button>
+      <h1>Marketing Cards</h1>
+    </div>
+
+    <div class="container">
+      <div class="card-designer">
+        <div class="design-options">
+          <div class="design-option active" data-design="modern">Modern</div>
+          <div class="design-option" data-design="classic">Classic</div>
+          <div class="design-option" data-design="vibrant">Vibrant</div>
+          <div class="design-option" data-design="minimalist">Minimalist</div>
+        </div>
+        <div class="card-preview">
+          <div id="card" class="card">
+            <img
+              id="cardLogo"
+              class="card-logo"
+              src="/placeholder.svg"
+              alt="Shop Logo"
+            />
+            <h2 id="cardShopName"></h2>
+            <p id="cardOwnerName"></p>
+            <p id="cardPhoneNumber"></p>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button id="shareBtn" class="btn btn-primary">Share as Image</button>
+          <button id="downloadBtn" class="btn btn-secondary">
+            Download Card
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+      // Card designs
+      const cardDesigns = {
+        modern: {
+          background: "linear-gradient(135deg, #00c6fb 0%, #005bea 100%)",
+          fontColor: "white",
+        },
+        classic: {
+          background: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+          fontColor: "black",
+        },
+        vibrant: {
+          background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+          fontColor: "white",
+        },
+        minimalist: {
+          background: "linear-gradient(135deg, #e0e0e0 0%, #ffffff 100%)",
+          fontColor: "black",
+        },
+      };
+
+      // DOM elements
+      const card = document.getElementById("card");
+      const cardLogo = document.getElementById("cardLogo");
+      const cardShopName = document.getElementById("cardShopName");
+      const cardOwnerName = document.getElementById("cardOwnerName");
+      const cardPhoneNumber = document.getElementById("cardPhoneNumber");
+      const designOptions = document.querySelectorAll(".design-option");
+      const shareBtn = document.getElementById("shareBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      // Load data from localStorage
+      const shopName = localStorage.getItem("shopname") || "My Shop";
+      const ownerName = localStorage.getItem("username") || "Shop Owner";
+      const phoneNumber = localStorage.getItem("phoneNumber") || "+1234567890";
+      const logoUrl =
+        localStorage.getItem("profileImage") ||
+        "https://via.placeholder.com/100";
+
+      // Set card content
+      cardShopName.textContent = shopName;
+      cardOwnerName.textContent = ownerName;
+      cardPhoneNumber.textContent = phoneNumber;
+      cardLogo.src = logoUrl;
+
+      // Apply initial design
+      applyDesign("modern");
+
+      // Design option click handler
+      designOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+          designOptions.forEach((opt) => opt.classList.remove("active"));
+          option.classList.add("active");
+          applyDesign(option.dataset.design);
+        });
+      });
+
+      // Apply card design
+      function applyDesign(designName) {
+        const design = cardDesigns[designName];
+        card.style.background = design.background;
+        card.style.color = design.fontColor;
+      }
+
+      // Share as image
+      shareBtn.addEventListener("click", () => {
+        html2canvas(card).then((canvas) => {
+          canvas.toBlob((blob) => {
+            const file = new File([blob], "shop-card.png", {
+              type: "image/png",
+            });
+            const shareData = {
+              files: [file],
+            };
+            if (navigator.canShare && navigator.canShare(shareData)) {
+              navigator.share(shareData);
+            } else {
+              alert(
+                "Sharing is not supported on this browser. You can download the image instead."
+              );
+            }
+          });
+        });
+      });
+
+      // Download card
+      downloadBtn.addEventListener("click", () => {
+        html2canvas(card).then((canvas) => {
+          const link = document.createElement("a");
+          link.download = "shop-card.png";
+          link.href = canvas.toDataURL();
+          link.click();
+        });
+      });
+    </script>
+  </body>
+</html>
