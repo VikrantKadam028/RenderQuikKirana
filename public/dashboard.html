@@ -442,6 +442,12 @@
       .share-btn span {
         color: white;
       }
+
+      .usersec{
+        width: 100%;
+        height: auto;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -486,6 +492,9 @@
             alt="Snacks"
           />
         </div>
+      </div>
+      <div class="usersec">
+        <p>Sign Up as a User! <a href="UserSection/sign-up.html" style="margin: 0 auto;">Click here</a></p>
       </div>
 
       <div class="menu">
@@ -548,7 +557,7 @@
         const phoneNumber = localStorage.getItem("PhoneNumber");
 
         if (storeSettings.isOnline && phoneNumber) {
-          const storeUrl = `/ActualStore.html?phone=${phoneNumber}`;
+          const storeUrl = `https://renderquikkirana.onrender.com/ActualStore.html?phone=${phoneNumber}`;
 
           // Update the permanent box content
           permanentBox.innerHTML = `
