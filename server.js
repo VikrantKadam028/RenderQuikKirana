@@ -6,9 +6,7 @@ const mongoose = require("mongoose");
 const User = require("./models/User");
 const Product = require("./models/Product");
 const Order = require("./models/Order");
-const passport = require("passport");
-const session = require("express-session");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
+
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -16,64 +14,6 @@ const client = require("twilio")(accountSid, authToken);
 
 // Initialize Express app
 const app = express();
-
-// Session Middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Configure Google OAuth Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/google/callback",
-    },
-    (accessToken, refreshToken, profile, done) => {
-      // Store user profile (In a real app, save to DB)
-      return done(null, profile);
-    }
-  )
-);
-
-// Serialize & Deserialize User
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
-
-// Google Auth Route
-app.get(
-  "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
-
-// Google Callback Route
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    res.redirect("/profile"); // Redirect to profile page after login
-  }
-);
-
-// Profile Route (Protected)
-app.get("/profile", (req, res) => {
-  if (!req.user) return res.redirect("/auth/google"); // Redirect if not logged in
-  res.send(`<h1>Welcome, ${req.user.displayName}</h1>`);
-});
-app.get("/logout", (req, res) => {
-  req.logout(() => {
-    res.redirect("/");
-  });
-});
 
 // Middleware
 app.use(cors());
