@@ -257,7 +257,7 @@
         </div>
 
         <div class="login-link">
-            Already have an account? <a href="sign-in.html">Login</a>
+            Already have an account? <a href="signin.html">Login</a>
         </div>
     </div>
 
@@ -366,7 +366,7 @@
         // Google Sign In
         function handleCredentialResponse(response) {
             // Send the token to your backend
-            fetch('https://renderquikkirana.onrender.com/auth/google', {
+            fetch('/auth/google', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
