@@ -6,16 +6,17 @@ const mongoose = require("mongoose");
 const User = require("./models/User");
 const Product = require("./models/Product");
 const Order = require("./models/Order");
-
+const Customer = require("./models/Customers");
+const bcrypt = require("bcryptjs");
+const ShopLocation = require("./models/ShopLocation");
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = require("twilio")(accountSid, authToken);
-
+const router = express.Router();
 // Initialize Express app
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -505,6 +506,236 @@ app.put("/api/orders/:orderId/status", async (req, res) => {
     });
   }
 });
+
+app.post("/api/signup", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Check if customer exists
+    const existingCustomer = await Customer.findOne({
+      $or: [
+        { email: email.toLowerCase() },
+        { username: username.toLowerCase() },
+      ],
+    });
+
+    if (existingCustomer) {
+      if (existingCustomer.email === email.toLowerCase()) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already registered. Please login.",
+        });
+      }
+      if (existingCustomer.username === username.toLowerCase()) {
+        return res.status(400).json({
+          success: false,
+          message: "Username already taken. Please choose another.",
+        });
+      }
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new customer
+    const newCustomer = new Customer({
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
+      password: hashedPassword,
+    });
+
+    await newCustomer.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Registration successful!",
+    });
+  } catch (error) {
+    console.error("Signup error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error during registration. Please try again.",
+      error: error.message,
+    });
+  }
+});
+
+// Login Route
+app.post("/api/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Find customer by username
+    const customer = await Customer.findOne({
+      username: username.toLowerCase(),
+    });
+
+    if (!customer) {
+      return res.status(400).json({
+        success: false,
+        message: "Account not found. Please sign up.",
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, customer.password);
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful!",
+      customer: {
+        username: customer.username,
+        email: customer.email,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error during login. Please try again.",
+      error: error.message,
+    });
+  }
+});
+
+// Get Customer Profile Route
+app.get("/api/customer/:username", async (req, res) => {
+  try {
+    const customer = await Customer.findOne({
+      username: req.params.username.toLowerCase(),
+    }).select("-password"); // Exclude password from response
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      customer,
+    });
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching profile",
+      error: error.message,
+    });
+  }
+});
+
+// Create or update shop location
+app.post("/api/shop-location", async (req, res) => {
+  try {
+    const { shopId, latitude, longitude, address } = req.body;
+
+    if (!shopId || !latitude || !longitude || !address) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
+    let shopLocation = await ShopLocation.findOne({ shopId });
+
+    if (shopLocation) {
+      shopLocation.latitude = latitude;
+      shopLocation.longitude = longitude;
+      shopLocation.address = address;
+      await shopLocation.save();
+    } else {
+      shopLocation = new ShopLocation({ shopId, latitude, longitude, address });
+      await shopLocation.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Shop location saved successfully",
+      data: shopLocation,
+    });
+  } catch (error) {
+    console.error("Error saving shop location:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to save shop location",
+      error: error.message,
+    });
+  }
+});
+
+// Get shop location
+app.get("/api/shop-location/:shopId", async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    const shopLocation = await ShopLocation.findOne({ shopId });
+
+    if (!shopLocation) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Shop location not found" });
+    }
+
+    res.status(200).json({ success: true, data: shopLocation });
+  } catch (error) {
+    console.error("Error fetching shop location:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch shop location",
+      error: error.message,
+    });
+  }
+});
+
+app.get("/api/shops", async (req, res) => {
+  const { lat, lon, distance = 6 } = req.query; // Get user location and distance from query params
+
+  if (!lat || !lon) {
+    return res
+      .status(400)
+      .json({ error: "Latitude and longitude are required." });
+  }
+
+  try {
+    const shops = await ShopLocation.find(); // Fetch all shops from the database
+    const nearbyShops = shops.filter((shop) => {
+      const shopDistance = calculateDistance(
+        lat,
+        lon,
+        shop.latitude,
+        shop.longitude
+      );
+      return shopDistance <= distance; // Filter shops within the specified distance
+    });
+
+    res.json(nearbyShops); // Return the nearby shops
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
+// Haversine formula to calculate distance
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+}
 
 // Send OTP
 app.post("/send-otp", async (req, res) => {
