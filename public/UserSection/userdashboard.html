@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Local Store Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Add Leaflet.js CSS & JS in <head> -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+    :root {
+      --primary-color: #1a1a1a;
+      --secondary-color: #ffffff;
+      --accent-color: #333333;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-light: #9ca3af;
+      --background-color: #f3f4f6;
+    }
+
+    body {
+      font-family: "Poppins";
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-color);
+      color: var(--text-primary);
+    }
+
+    .dark-mode {
+      --background-color: #1f2937;
+      --text-primary: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-light: #9ca3af;
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: var(--secondary-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: var(--secondary-color);
+      padding: 1rem;
+      height: 50px; /* Fixed height for consistent spacing */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    header img {
+      width: auto;
+      height: 40px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 0.5rem;
+    }
+
+    main {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    section {
+      display: none;
+    }
+
+    section.active {
+      display: block;
+    }
+
+    .hero-section {
+      margin-bottom: 2rem;
+    }
+
+    .map-preview,
+    .map-view {
+      height: 400px;
+      background-color: #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+    }
+
+    .search-bar {
+      display: flex;
+      margin-bottom: 1rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid var(--text-light);
+      border-radius: 6px 0 0 6px;
+      font-size: 16px;
+    }
+
+    .search-bar button {
+      background-color: var(--primary-color);
+      color: var(--secondary-color);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .quick-categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .quick-categories button {
+      background-color: var(--accent-color);
+      color: var(--secondary-color);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .panel {
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .bottom-nav {
+      font-family: poppins;
+      display: flex;
+      justify-content: space-around;
+      background-color: var(--secondary-color);
+      padding: 0.5rem;
+      position: sticky;
+      bottom: 0;
+      border-top: 1px solid var(--text-light);
+    }
+
+    .bottom-nav button {
+      background-color: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .bottom-nav button.active {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    @media (min-width: 769px) {
+      #app {
+        max-width: 1024px;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+      }
+
+      .hero-section {
+        grid-column: 1 / -1;
+      }
+    }
+    #header-content {
+      position: relative;
+      width: 100%;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #header-logo {
+      width: auto;
+      height: 40px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    #header-text {
+      font-size: 20px;
+      font-weight: 400;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      margin: 0;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .slide-down {
+      animation: slideDown 0.5s ease-out forwards;
+    }
+
+    .slide-up {
+      animation: slideUp 0.5s ease-out forwards;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in forwards;
+    }
+
+    .fade-out {
+      animation: fadeOut 0.5s ease-out forwards;
+    }
+
+    @keyframes slideDown {
+      0% {
+        transform: translate(-50%, -100%);
+        opacity: 0;
+      }
+      100% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      0% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeIn {
+      0% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0;
+      }
+    }
+    #greeting {
+      background-color: rgb(248, 248, 248);
+      border-radius: 10px;
+      padding: 10px;
+      color: rgb(80, 80, 80);
+    }
+  </style>
+  <body>
+    <div id="app">
+      <header>
+        <div id="header-content">
+          <img id="header-logo" src="img/whitelogo.png" alt="" />
+          <p id="header-text"></p>
+        </div>
+        <!-- <button id="toggleDarkMode">🌙</button> -->
+      </header>
+
+      <main>
+        <section id="homeScreen" class="active">
+          <div class="hero-section">
+            <p
+              id="greeting"
+              style="font-size: 20px; font-weight: 900; margin: 0"
+            ></p>
+
+            <p id="locationContainer">
+              <button id="getAddressBtn">Get My Address</button>
+            </p>
+            <p id="addressDisplay" style="display: none">
+              <span>📍</span>
+              <span id="addressText" style="font-size: 14px"
+                >Fetching location...</span
+              >
+            </p>
+
+            <div class="search-bar">
+              <input type="text" placeholder="What are you looking for?" />
+              <button>Search</button>
+            </div>
+
+            <h2>Nearby Stores</h2>
+            <div id="storeMap" class="map-view"></div>
+          </div>
+        </section>
+
+        <section id="searchSection">
+          <h2>Search & Product Discovery</h2>
+          <!-- Add search filters and results here -->
+        </section>
+
+        <section id="ordersSection">
+          <h2>Orders</h2>
+          <div class="active-orders">
+            <!-- Add active order items here -->
+          </div>
+          <div class="order-history">
+            <!-- Add order history items here -->
+          </div>
+        </section>
+
+        <section id="favoritesSection">
+          <h2>Favorites</h2>
+          <div class="saved-stores">
+            <!-- Add saved store items here -->
+          </div>
+          <div class="saved-items">
+            <!-- Add saved item cards here -->
+          </div>
+        </section>
+
+        <section id="notificationsSection">
+          <h2>Notifications</h2>
+          <!-- Add notification items and filters here -->
+        </section>
+
+        <section id="profileSection">
+          <h2>Profile</h2>
+          <!-- Add profile information, addresses, preferences, and help & support options here -->
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <button data-section="homeScreen" class="active">Home</button>
+        <button data-section="searchSection">Search</button>
+        <button data-section="ordersSection">Orders</button>
+        <button data-section="profileSection">Profile</button>
+      </nav>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYun3iEKXcgvPXqe5haLrehsjfgV02vvE"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Get the username from localStorage
+        const username = localStorage.getItem("customerUsername") || "User";
+        document.getElementById("greeting").textContent = `Hello, ${username}`;
+
+        const getAddressBtn = document.getElementById("getAddressBtn");
+        const addressText = document.getElementById("addressText");
+        const storeMap = document.getElementById("storeMap");
+        const toast = document.createElement("div");
+        toast.id = "toast";
+        toast.style.display = "none";
+        document.body.appendChild(toast);
+
+        function showToast(message, duration = 2000) {
+          toast.textContent = message;
+          toast.style.display = "block";
+          setTimeout(() => {
+            toast.style.display = "none";
+          }, duration);
+        }
+
+        // Define a custom icon for the store
+        const storeIcon = L.icon({
+          iconUrl: "img/store.webp", // Replace with the path to your store icon image
+          iconSize: [40, 40], // Size of the icon
+          iconAnchor: [12, 41], // Point of the icon which will correspond to marker's location
+          popupAnchor: [1, -34], // Point from which the popup should open relative to the iconAnchor
+        });
+
+        function getNearbyShops(userLat, userLon) {
+          fetch(`/api/shops?lat=${userLat}&lon=${userLon}`)
+            .then((response) => response.json())
+            .then((shops) => {
+              displayShopsOnMap(shops); // Call function to display shops on the map
+            })
+            .catch((error) => console.error("Error fetching shops:", error));
+        }
+        function displayShopsOnMap(shops) {
+          console.log("Shops data:", shops); // Check if data is received
+          shops.forEach((shop) => {
+            console.log("Adding marker for shop:", shop); // Debug each marker
+            L.marker([shop.latitude, shop.longitude], { icon: storeIcon })
+              .addTo(map)
+              .bindPopup(shop.address)
+              .openPopup();
+          });
+        }
+
+        // Update the getUserLocation function
+        function getUserLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+                initMap(userLat, userLon); // This will also trigger getNearbyShops
+              },
+              () => showToast("Location access denied.")
+            );
+          } else {
+            showToast("Geolocation not supported.");
+          }
+        }
+
+        // Remove the separate getNearbyShops() call as it's now called from within initMap
+        getUserLocation();
+
+        function fetchAddress(lat, lon) {
+          fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              const address = data.display_name || "Address not found";
+              addressText.textContent = address;
+              document.getElementById("addressDisplay").style.display = "block";
+              localStorage.setItem(
+                "shopLocation",
+                JSON.stringify({ lat, lon, address })
+              );
+              showToast("Address fetched successfully!");
+              initMap(lat, lon); // Initialize the map with the fetched location
+            })
+            .catch(() => showToast("Failed to get address"));
+        }
+
+        function getUserLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) =>
+                fetchAddress(
+                  position.coords.latitude,
+                  position.coords.longitude
+                ),
+              () => showToast("Location access denied.")
+            );
+          } else {
+            showToast("Geolocation not supported.");
+          }
+        }
+
+        function loadStoredLocation() {
+          const storedLocation = localStorage.getItem("shopLocation");
+          const getAddressBtn = document.getElementById("getAddressBtn"); // Get the button reference
+          if (storedLocation) {
+            const { lat, lon, address } = JSON.parse(storedLocation);
+            addressText.textContent = address;
+            document.getElementById("addressDisplay").style.display = "block"; // Show the address display
+            getAddressBtn.style.display = "none"; // Hide the Get Address button
+            initMap(lat, lon); // Initialize the map with the stored location
+          } else {
+            getAddressBtn.style.display = "block"; // Show the button if no address is stored
+          }
+        }
+
+        let map; // Declare map globally
+
+        function initMap(lat, lon) {
+          if (isNaN(lat) || isNaN(lon)) {
+            showToast("Invalid latitude or longitude values.");
+            return;
+          }
+
+          // Initialize the map
+          map = L.map("storeMap").setView([lat, lon], 20);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          }).addTo(map);
+
+          // Add user marker
+          L.marker([lat, lon]).addTo(map).bindPopup("You are here").openPopup();
+
+          // Now that we have coordinates, fetch nearby shops
+          getNearbyShops(lat, lon);
+        }
+
+        if (getAddressBtn) {
+          getAddressBtn.addEventListener("click", getUserLocation);
+        }
+        loadStoredLocation();
+
+        const logo = document.getElementById("header-logo");
+        const text = document.getElementById("header-text");
+        let step = 0;
+
+        function resetAnimations() {
+          logo.classList.remove("slide-down", "slide-up");
+          text.classList.remove("fade-in", "fade-out");
+        }
+
+        function animateHeader() {
+          resetAnimations();
+          switch (step) {
+            case 0:
+              logo.classList.add("slide-down");
+              setTimeout(() => logo.classList.add("slide-up"), 2000);
+              break;
+            case 1:
+              text.textContent = "Get Groceries";
+              text.classList.add("fade-in");
+              setTimeout(() => text.classList.add("fade-out"), 2000);
+              break;
+            case 2:
+              text.textContent = "In Just One Click!";
+              text.classList.add("fade-in");
+              setTimeout(() => text.classList.add("fade-out"), 2000);
+              break;
+          }
+          step = (step + 1) % 3;
+          setTimeout(animateHeader, 3000);
+        }
+
+        animateHeader();
+      });
+    </script>
+  </body>
+</html>
