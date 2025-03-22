@@ -378,181 +378,510 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYun3iEKXcgvPXqe5haLrehsjfgV02vvE"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        // Get the username from localStorage
-        const username = localStorage.getItem("customerUsername") || "User";
-        document.getElementById("greeting").textContent = `Hello, ${username}`;
+                  document.addEventListener("DOMContentLoaded", function () {
+                    // Get the username from localStorage
+                    const username = localStorage.getItem("customerUsername") || "User";
+                    document.getElementById("greeting").textContent = `Hello, ${username}`;
 
-        const getAddressBtn = document.getElementById("getAddressBtn");
-        const addressText = document.getElementById("addressText");
-        const storeMap = document.getElementById("storeMap");
-        const toast = document.createElement("div");
-        toast.id = "toast";
-        toast.style.display = "none";
-        document.body.appendChild(toast);
+                    const getAddressBtn = document.getElementById("getAddressBtn");
+                    const addressText = document.getElementById("addressText");
+                    const storeMap = document.getElementById("storeMap");
+                    const toast = document.createElement("div");
+                    toast.id = "toast";
+                    toast.style.display = "none";
+                    toast.style.position = "fixed";
+                    toast.style.bottom = "20px";
+                    toast.style.left = "50%";
+                    toast.style.transform = "translateX(-50%)";
+                    toast.style.padding = "10px 20px";
+                    toast.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+                    toast.style.color = "white";
+                    toast.style.borderRadius = "5px";
+                    toast.style.zIndex = "1000";
+                    document.body.appendChild(toast);
 
-        function showToast(message, duration = 2000) {
-          toast.textContent = message;
-          toast.style.display = "block";
-          setTimeout(() => {
-            toast.style.display = "none";
-          }, duration);
-        }
+                    function showToast(message, duration = 2000) {
+                      toast.textContent = message;
+                      toast.style.display = "block";
+                      setTimeout(() => {
+                        toast.style.display = "none";
+                      }, duration);
+                    }
 
-        // Define a custom icon for the store
-        const storeIcon = L.icon({
-          iconUrl: "img/store.webp", // Replace with the path to your store icon image
-          iconSize: [40, 40], // Size of the icon
-          iconAnchor: [12, 41], // Point of the icon which will correspond to marker's location
-          popupAnchor: [1, -34], // Point from which the popup should open relative to the iconAnchor
-        });
+                    // Define a custom icon for the store
+                    const storeIcon = L.icon({
+                      iconUrl: "img/store.webp", // Replace with the path to your store icon image
+                      iconSize: [40, 40], // Size of the icon
+                      iconAnchor: [20, 40], // Point of the icon which will correspond to marker's location
+                      popupAnchor: [0, -40], // Point from which the popup should open relative to the iconAnchor
+                    });
 
-        function getNearbyShops(userLat, userLon) {
-          fetch(`/api/shops?lat=${userLat}&lon=${userLon}`)
-            .then((response) => response.json())
-            .then((shops) => {
-              displayShopsOnMap(shops); // Call function to display shops on the map
-            })
-            .catch((error) => console.error("Error fetching shops:", error));
-        }
-        function displayShopsOnMap(shops) {
-          console.log("Shops data:", shops); // Check if data is received
-          shops.forEach((shop) => {
-            console.log("Adding marker for shop:", shop); // Debug each marker
-            L.marker([shop.latitude, shop.longitude], { icon: storeIcon })
-              .addTo(map)
-              .bindPopup(shop.address)
-              .openPopup();
-          });
-        }
+                    // Define user icon
+                    const userIcon = L.icon({
+                      iconUrl: "https://cdn-icons-png.flaticon.com/512/1365/1365700.png", // Replace with your user location icon
+                      iconSize: [40, 40],
+                      iconAnchor: [15, 30],
+                      popupAnchor: [0, -30],
+                    });
 
-        // Update the getUserLocation function
-        function getUserLocation() {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                const userLat = position.coords.latitude;
-                const userLon = position.coords.longitude;
-                initMap(userLat, userLon); // This will also trigger getNearbyShops
-              },
-              () => showToast("Location access denied.")
-            );
-          } else {
-            showToast("Geolocation not supported.");
-          }
-        }
+                    // Function to calculate distance between two points using Haversine formula
+                    function calculateDistance(lat1, lon1, lat2, lon2) {
+                      const R = 6371; // Radius of the Earth in km
+                      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+                      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+                      const a =
+                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos((lat1 * Math.PI) / 180) *
+                          Math.cos((lat2 * Math.PI) / 180) *
+                          Math.sin(dLon / 2) *
+                          Math.sin(dLon / 2);
+                      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                      const distance = R * c; // Distance in km
+                      return distance;
+                    }
 
-        // Remove the separate getNearbyShops() call as it's now called from within initMap
-        getUserLocation();
+                  // Fetch shops from backend API
+                  function fetchNearbyShops(userLat, userLon, maxRadius = 6) {
+                    // Add loading indicator for better UX
+                    showToast("Fetching nearby shops...");
 
-        function fetchAddress(lat, lon) {
-          fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              const address = data.display_name || "Address not found";
-              addressText.textContent = address;
-              document.getElementById("addressDisplay").style.display = "block";
-              localStorage.setItem(
-                "shopLocation",
-                JSON.stringify({ lat, lon, address })
-              );
-              showToast("Address fetched successfully!");
-              initMap(lat, lon); // Initialize the map with the fetched location
-            })
-            .catch(() => showToast("Failed to get address"));
-        }
+                    // Call your backend API to fetch shop locations
+                    fetch(
+                      `/api/shops/nearby?lat=${userLat}&lon=${userLon}&radius=${maxRadius}`
+                    )
+                      .then((response) => {
+                        if (!response.ok) {
+                          throw new Error("Network response was not ok");
+                        }
+                        return response.json();
+                      })
+                      .then((response) => {
+                        // Extract the shops array from the response object
+                        const shops = response.data || [];
 
-        function getUserLocation() {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) =>
-                fetchAddress(
-                  position.coords.latitude,
-                  position.coords.longitude
-                ),
-              () => showToast("Location access denied.")
-            );
-          } else {
-            showToast("Geolocation not supported.");
-          }
-        }
+                        if (shops.length === 0) {
+                          showToast("No shops found within 6km radius");
+                          // Still display the map with just the user's location
+                          displayShopsOnMap([], userLat, userLon);
+                        } else {
+                          // The backend now includes distance info, so we might not need to recalculate
+                          // However, if you still want to process them:
+                          const shopsWithDistance = shops.map((shop) => {
+                            // Distance is already calculated by the backend, but you can recalculate if needed
+                            // const distance = calculateDistance(userLat, userLon, shop.latitude, shop.longitude);
+                            return {
+                              ...shop,
+                              // distance is already formatted to 1 decimal place by the backend
+                            };
+                          });
 
-        function loadStoredLocation() {
-          const storedLocation = localStorage.getItem("shopLocation");
-          const getAddressBtn = document.getElementById("getAddressBtn"); // Get the button reference
-          if (storedLocation) {
-            const { lat, lon, address } = JSON.parse(storedLocation);
-            addressText.textContent = address;
-            document.getElementById("addressDisplay").style.display = "block"; // Show the address display
-            getAddressBtn.style.display = "none"; // Hide the Get Address button
-            initMap(lat, lon); // Initialize the map with the stored location
-          } else {
-            getAddressBtn.style.display = "block"; // Show the button if no address is stored
-          }
-        }
+                          // Display shops on map
+                          displayShopsOnMap(shopsWithDistance, userLat, userLon);
 
-        let map; // Declare map globally
 
-        function initMap(lat, lon) {
-          if (isNaN(lat) || isNaN(lon)) {
-            showToast("Invalid latitude or longitude values.");
-            return;
-          }
+                            // Filter shops within the radius
+                            const nearbyShops = shopsWithDistance.filter(
+                              (shop) => parseFloat(shop.distance) <= maxRadius
+                            );
 
-          // Initialize the map
-          map = L.map("storeMap").setView([lat, lon], 20);
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          }).addTo(map);
+                            if (nearbyShops.length === 0) {
+                              showToast("No shops found within 6km radius");
+                            } else {
+                              showToast(`Found ${nearbyShops.length} nearby shops`);
+                            }
 
-          // Add user marker
-          L.marker([lat, lon]).addTo(map).bindPopup("You are here").openPopup();
+                            // Display the shops on the map
+                            displayShopsOnMap(nearbyShops, userLat, userLon);
+                          }
+                        })
+                        .catch((error) => {
+                          console.error("Error fetching shops:", error);
+                          showToast("Error fetching nearby shops");
+                          // If API fails, display empty map with just user location
+                          displayShopsOnMap([], userLat, userLon);
+                        });
+                    }
 
-          // Now that we have coordinates, fetch nearby shops
-          getNearbyShops(lat, lon);
-        }
+                    function displayShopsOnMap(shops, userLat, userLon) {
+                      console.log("Shops data:", shops);
+                      phonenum = localStorage.getItem('PhoneNumber');
 
-        if (getAddressBtn) {
-          getAddressBtn.addEventListener("click", getUserLocation);
-        }
-        loadStoredLocation();
+                      // Add user marker first
+                      L.marker([userLat, userLon], { icon: userIcon })
+                        .addTo(map)
+                        .bindPopup("Your Location")
+                        .openPopup();
 
-        const logo = document.getElementById("header-logo");
-        const text = document.getElementById("header-text");
-        let step = 0;
+                      // Add store markers
+                      shops.forEach((shop) => {
+                        console.log("Adding marker for shop:", shop);
+                        const marker = L.marker([shop.latitude, shop.longitude], {
+                          icon: storeIcon,
+                        }).addTo(map);
 
-        function resetAnimations() {
-          logo.classList.remove("slide-down", "slide-up");
-          text.classList.remove("fade-in", "fade-out");
-        }
+                        // Create a nice popup with shop details
+                        const popupContent = `
+                          <div style="text-align:center; padding:5px;">
+                            <h3 style="margin:0 0 5px 0;">${
+                              shop.shopName || "QuikKirana Shop"
+                            }</h3>
+                            <p style="margin:0 0 5px 0;">${shop.distance} km away</p>
 
-        function animateHeader() {
-          resetAnimations();
-          switch (step) {
-            case 0:
-              logo.classList.add("slide-down");
-              setTimeout(() => logo.classList.add("slide-up"), 2000);
-              break;
-            case 1:
-              text.textContent = "Get Groceries";
-              text.classList.add("fade-in");
-              setTimeout(() => text.classList.add("fade-out"), 2000);
-              break;
-            case 2:
-              text.textContent = "In Just One Click!";
-              text.classList.add("fade-in");
-              setTimeout(() => text.classList.add("fade-out"), 2000);
-              break;
-          }
-          step = (step + 1) % 3;
-          setTimeout(animateHeader, 3000);
-        }
+                            <button
+                              style="background-color:#1a1a1a; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin-top:5px;"
+                              onclick="window.location.href='https://renderquikkirana.onrender.com/ActualStore.html?phone=${phonenum}'">
+                              Visit Shop
+                            </button>
+                          </div>
+                        `;
 
-        animateHeader();
-      });
+                        marker.bindPopup(popupContent);
+
+                        // Add smooth animation and interaction
+                        marker.on("mouseover", function () {
+                          marker.openPopup();
+                        });
+                      });
+
+                      // Create store list if there are shops
+                      if (shops.length > 0) {
+                        createNearbyStoresList(shops);
+
+                        // Adjust map view to fit all markers
+                        const bounds = [];
+                        bounds.push([userLat, userLon]);
+                        shops.forEach((shop) =>
+                          bounds.push([shop.latitude, shop.longitude])
+                        );
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                      } else {
+                        // If no shops, just center on user with appropriate zoom
+                        map.setView([userLat, userLon], 12);
+
+                        // Display "No stores found" message
+                        createEmptyStoresList();
+                      }
+                    }
+
+                    // Update the getUserLocation function
+                    function getUserLocation() {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          (position) => {
+                            const userLat = position.coords.latitude;
+                            const userLon = position.coords.longitude;
+                            fetchAddress(userLat, userLon);
+                          },
+                          () => showToast("Location access denied.")
+                        );
+                      } else {
+                        showToast("Geolocation not supported.");
+                      }
+                    }
+
+                    function fetchAddress(lat, lon) {
+                      fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+                      )
+                        .then((response) => response.json())
+                        .then((data) => {
+                          const address = data.display_name || "Address not found";
+                          addressText.textContent = address;
+                          document.getElementById("addressDisplay").style.display = "block";
+                          document.getElementById("getAddressBtn").style.display = "none";
+
+                          localStorage.setItem(
+                            "shopLocation",
+                            JSON.stringify({ lat, lon, address })
+                          );
+                          showToast("Address fetched successfully!");
+                          initMap(lat, lon);
+                        })
+                        .catch(() => {
+                          showToast("Failed to get address");
+                          // If address fetch fails, still initialize the map with coordinates
+                          initMap(lat, lon);
+                        });
+                    }
+
+                    function loadStoredLocation() {
+                      const storedLocation = localStorage.getItem("shopLocation");
+                      const getAddressBtn = document.getElementById("getAddressBtn");
+                      if (storedLocation) {
+                        const { lat, lon, address } = JSON.parse(storedLocation);
+                        addressText.textContent = address;
+                        document.getElementById("addressDisplay").style.display = "block";
+                        getAddressBtn.style.display = "none";
+                        initMap(lat, lon);
+                      } else {
+                        getAddressBtn.style.display = "block";
+                      }
+                    }
+
+                    let map; // Declare map globally
+
+                    function initMap(lat, lon) {
+                      if (isNaN(lat) || isNaN(lon)) {
+                        showToast("Invalid latitude or longitude values.");
+                        return;
+                      }
+
+                      // If map already exists, remove it and create a new one
+                      if (map) {
+                        map.remove();
+                      }
+
+                      // Initialize the map
+                      map = L.map("storeMap").setView([lat, lon], 13);
+
+                      // Load and display OpenStreetMap tiles
+                      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                        attribution: "&copy; OpenStreetMap contributors",
+                      }).addTo(map);
+
+                      // Call function to fetch and display nearby shops
+                      fetchNearbyShops(lat, lon);
+                    }
+
+                    function createNearbyStoresList(shops) {
+                      // Sort shops by distance
+                      shops.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+                      // Find or create the container for the store list
+                      let storesContainer = document.querySelector(".nearby-stores-list");
+                      if (!storesContainer) {
+                        storesContainer = document.createElement("div");
+                        storesContainer.className = "nearby-stores-list";
+                        // Insert after the map
+                        storeMap.parentNode.insertBefore(
+                          storesContainer,
+                          storeMap.nextSibling
+                        );
+                      } else {
+                        // Clear existing content if container exists
+                        storesContainer.innerHTML = "";
+                      }
+
+                      // Create the list header
+                      const header = document.createElement("h3");
+                      header.textContent = "Nearby Stores";
+                      header.style.marginTop = "20px";
+                      storesContainer.appendChild(header);
+
+                      // Create the list
+                      const storeList = document.createElement("ul");
+                      storeList.style.listStyle = "none";
+                      storeList.style.padding = "0";
+                      storeList.style.margin = "0";
+
+                      // Add each store to the list
+                      shops.forEach((shop) => {
+                        const storeItem = document.createElement("li");
+                        storeItem.style.padding = "10px";
+                        storeItem.style.margin = "5px 0";
+                        storeItem.style.backgroundColor = "#f8f8f8";
+                        storeItem.style.borderRadius = "5px";
+                        storeItem.style.display = "flex";
+                        storeItem.style.justifyContent = "space-between";
+                        storeItem.style.alignItems = "center";
+
+                        const storeInfo = document.createElement("div");
+
+                        const storeName = document.createElement("strong");
+                        storeName.textContent = shop.shopName || "QuikKirana Shop";
+                        storeInfo.appendChild(storeName);
+
+                        const storeDistance = document.createElement("div");
+                        storeDistance.textContent = `${shop.distance} km away`;
+                        storeDistance.style.fontSize = "14px";
+                        storeDistance.style.color = "#666";
+                        storeInfo.appendChild(storeDistance);
+
+                        storeItem.appendChild(storeInfo);
+
+                        const viewBtn = document.createElement("button");
+                        viewBtn.textContent = "View Store";
+                        viewBtn.style.padding = "5px 10px";
+                        viewBtn.style.backgroundColor = "#1a1a1a";
+                        viewBtn.style.color = "#ffffff";
+                        viewBtn.style.border = "none";
+                        viewBtn.style.borderRadius = "4px";
+                        viewBtn.style.cursor = "pointer";
+
+                        viewBtn.addEventListener("click", () => {
+                          // Center map on this store and open popup
+                          map.setView([shop.latitude, shop.longitude], 16);
+                          // Find the marker for this store and open its popup
+                          map.eachLayer((layer) => {
+                            if (
+                              layer instanceof L.Marker &&
+                              layer.getLatLng().lat === shop.latitude &&
+                              layer.getLatLng().lng === shop.longitude
+                            ) {
+                              layer.openPopup();
+                            }
+                          });
+                        });
+
+                        storeItem.appendChild(viewBtn);
+                        storeList.appendChild(storeItem);
+                      });
+
+                      storesContainer.appendChild(storeList);
+                    }
+
+                    function createEmptyStoresList() {
+                      // Find or create the container for the store list
+                      let storesContainer = document.querySelector(".nearby-stores-list");
+                      if (!storesContainer) {
+                        storesContainer = document.createElement("div");
+                        storesContainer.className = "nearby-stores-list";
+                        // Insert after the map
+                        storeMap.parentNode.insertBefore(
+                          storesContainer,
+                          storeMap.nextSibling
+                        );
+                      } else {
+                        // Clear existing content if container exists
+                        storesContainer.innerHTML = "";
+                      }
+
+                      // Create the list header
+                      const header = document.createElement("h3");
+                      header.textContent = "Nearby Stores";
+                      header.style.marginTop = "20px";
+                      storesContainer.appendChild(header);
+
+                      // Create empty state message
+                      const emptyMessage = document.createElement("div");
+                      emptyMessage.style.padding = "20px";
+                      emptyMessage.style.textAlign = "center";
+                      emptyMessage.style.backgroundColor = "#f8f8f8";
+                      emptyMessage.style.borderRadius = "5px";
+                      emptyMessage.style.margin = "10px 0";
+
+                      emptyMessage.innerHTML = `
+                        <p style="margin-bottom: 10px;">No QuikKirana shops found within 6km of your location.</p>
+                        <p style="font-size: 14px; color: #666;">Try a different location or check back later as we add more stores to our network.</p>
+                      `;
+
+                      storesContainer.appendChild(emptyMessage);
+                    }
+
+                    // Set up navigation
+                    const bottomNavButtons =
+                      document.querySelectorAll(".bottom-nav button");
+
+                    bottomNavButtons.forEach((button) => {
+                      button.addEventListener("click", () => {
+                        // Remove active class from all buttons
+                        bottomNavButtons.forEach((btn) => btn.classList.remove("active"));
+
+                        // Add active class to clicked button
+                        button.classList.add("active");
+
+                        // Hide all sections
+                        document.querySelectorAll("main section").forEach((section) => {
+                          section.classList.remove("active");
+                        });
+
+                        // Show the selected section
+                        const sectionId = button.getAttribute("data-section");
+                        document.getElementById(sectionId).classList.add("active");
+                      });
+                    });
+
+                    // Set up search functionality
+                    const searchInput = document.querySelector(".search-bar input");
+                    const searchButton = document.querySelector(".search-bar button");
+
+                    searchButton.addEventListener("click", () => {
+                      const searchTerm = searchInput.value.trim();
+                      if (searchTerm) {
+                        showToast(`Searching for: ${searchTerm}`);
+                        // Switch to search section
+                        document.querySelectorAll("main section").forEach((section) => {
+                          section.classList.remove("active");
+                        });
+                        document.getElementById("searchSection").classList.add("active");
+
+                        // Update bottom nav to highlight search
+                        bottomNavButtons.forEach((btn) => {
+                          btn.classList.remove("active");
+                          if (btn.getAttribute("data-section") === "searchSection") {
+                            btn.classList.add("active");
+                          }
+                        });
+
+                        // Update search section with placeholder results
+                        document.getElementById("searchSection").innerHTML = `
+                          <h2>Search Results for "${searchTerm}"</h2>
+                          <div class="search-results">
+                            <p>Showing results for "${searchTerm}" near your location...</p>
+                            <div class="search-filters">
+                              <button>Filter</button>
+                              <button>Sort by: Relevance</button>
+                            </div>
+                            <div class="search-results-container">
+                              <p>Loading results...</p>
+                            </div>
+                          </div>
+                        `;
+                      } else {
+                        showToast("Please enter a search term");
+                      }
+                    });
+
+                    // Allow search on Enter key
+                    searchInput.addEventListener("keypress", (e) => {
+                      if (e.key === "Enter") {
+                        searchButton.click();
+                      }
+                    });
+
+                    // Initialize the application by setting up event listeners
+                    if (getAddressBtn) {
+                      getAddressBtn.addEventListener("click", getUserLocation);
+                    }
+
+                    // Load stored location or show address button
+                    loadStoredLocation();
+
+                    // Header animation setup
+                    const logo = document.getElementById("header-logo");
+                    const text = document.getElementById("header-text");
+                    let step = 0;
+
+                    function resetAnimations() {
+                      logo.classList.remove("slide-down", "slide-up");
+                      text.classList.remove("fade-in", "fade-out");
+                    }
+
+                    function animateHeader() {
+                      resetAnimations();
+                      switch (step) {
+                        case 0:
+                          logo.classList.add("slide-down");
+                          setTimeout(() => logo.classList.add("slide-up"), 2000);
+                          break;
+                        case 1:
+                          text.textContent = "Get Groceries";
+                          text.classList.add("fade-in");
+                          setTimeout(() => text.classList.add("fade-out"), 2000);
+                          break;
+                        case 2:
+                          text.textContent = "In Just One Click!";
+                          text.classList.add("fade-in");
+                          setTimeout(() => text.classList.add("fade-out"), 2000);
+                          break;
+                      }
+                      step = (step + 1) % 3;
+                      setTimeout(animateHeader, 3000);
+                    }
+
+                    // Start the header animation
+                    animateHeader();
+                  });
     </script>
   </body>
 </html>
