@@ -695,42 +695,79 @@ app.get("/api/shop-location/:shopId", async (req, res) => {
   }
 });
 
-app.get("/api/shops", async (req, res) => {
-  const { lat, lon, distance = 6 } = req.query; // Get user location and distance from query params
-
-  if (!lat || !lon) {
-    return res
-      .status(400)
-      .json({ error: "Latitude and longitude are required." });
-  }
-
+// Replace both existing nearby shop implementations with this one
+app.get("/api/shops/nearby", async (req, res) => {
   try {
-    const shops = await ShopLocation.find(); // Fetch all shops from the database
-    const nearbyShops = shops.filter((shop) => {
-      const shopDistance = calculateDistance(
-        lat,
-        lon,
-        shop.latitude,
-        shop.longitude
-      );
-      return shopDistance <= distance; // Filter shops within the specified distance
-    });
+    const { lat, lon, radius = 6 } = req.query;
 
-    res.json(nearbyShops); // Return the nearby shops
+    // Validate inputs
+    if (!lat || !lon) {
+      return res.status(400).json({
+        success: false,
+        message: "Latitude and longitude are required",
+      });
+    }
+
+    const userLat = parseFloat(lat);
+    const userLon = parseFloat(lon);
+    const maxRadius = parseFloat(radius);
+
+    if (isNaN(userLat) || isNaN(userLon) || isNaN(maxRadius)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid coordinate or radius values",
+      });
+    }
+
+    // Get shop locations with populated shop data
+    const shopLocations = await ShopLocation.find().populate(
+      "shopId",
+      "username shopName"
+    );
+
+    // Calculate distance and filter by radius
+    const nearbyShops = shopLocations
+      .map((shop) => {
+        const distance = calculateDistance(
+          userLat,
+          userLon,
+          shop.latitude,
+          shop.longitude
+        );
+
+        return {
+          shopId: shop.shopId._id,
+          shopName: shop.shopId.shopName || shop.shopId.username,
+          latitude: shop.latitude,
+          longitude: shop.longitude,
+          address: shop.address,
+          distance: distance.toFixed(1),
+        };
+      })
+      .filter((shop) => parseFloat(shop.distance) <= maxRadius);
+
+    res.status(200).json({
+      success: true,
+      data: nearbyShops,
+    });
   } catch (error) {
-    res.status(500).send(error);
+    console.error("Error fetching nearby shops:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 });
-
-// Haversine formula to calculate distance
+// Define this once at the top level of your file
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radius of the Earth in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
