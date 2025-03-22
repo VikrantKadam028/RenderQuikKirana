@@ -134,7 +134,7 @@ body {
   }
 
   .page1section2inner button {
-    margin-top: 30px; /* Reduced button margin for smaller screens */
+    margin-top: 18px; /* Reduced button margin for smaller screens */
   }
 }
 /* Process indicator with 3 dots */
@@ -153,6 +153,9 @@ body {
   display: inline-block;
   opacity: 0.5; /* Slightly faded for inactive state */
   transition: background-color 0.3s, opacity 0.3s ease-in-out;
+}
+#signup{
+  margin-top: 14px;
 }
 
 /* Active dot styles */
