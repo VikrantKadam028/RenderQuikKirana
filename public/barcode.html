@@ -747,408 +747,6 @@
       </div>
     </div>
     <script>
-      // Global variables
-      let allProducts = {}; // Will hold all products from database
-      let cart = [];
-      let currentDateTime = new Date();
-      let html5QrcodeScanner;
-
-      // Function to get the shop ID from local storage
-      function getShopId() {
-        return localStorage.getItem("shopId");
-      }
-
-      // Fetch all products from the database when the page loads
-      async function fetchProducts() {
-        try {
-          const shopId = getShopId();
-          if (!shopId) {
-            throw new Error("Shop ID not found");
-          }
-
-          const response = await fetch(
-            `https://renderquikkirana.onrender.com/products/shop/${shopId}`
-          );
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          if (!data.success) {
-            throw new Error(data.message || "Failed to fetch products");
-          }
-
-          // Convert the array of products to an object indexed by barcode
-          const productsObj = {};
-          (data.products || []).forEach((product) => {
-            productsObj[product.barcode] = {
-              name: product.name,
-              price: product.price,
-              image: product.image || "default-product-image.jpg", // Default image if none provided
-            };
-          });
-
-          console.log("Products loaded:", productsObj);
-          return productsObj;
-        } catch (error) {
-          console.error("Error fetching products:", error);
-          // Return fallback products in case of error
-          return loadFallbackProducts();
-        }
-      }
-
-      // Initialize the application
-      async function initializeApp() {
-        try {
-          // Initialize date/time display
-          updateDateTime();
-          setInterval(updateDateTime, 60000);
-
-          // Set up event listeners
-          setupEventListeners();
-
-          // Fetch products and store them in memory
-          allProducts = await fetchProducts();
-          console.log(
-            `Loaded ${Object.keys(allProducts).length} products from database`
-          );
-
-          // Initialize display
-          updateTotal();
-          displayCart();
-
-          // Initialize QR scanner
-          initQRScanner();
-        } catch (error) {
-          console.error("Failed to initialize app:", error);
-          alert(
-            "Failed to load products. Please refresh the page or try again later."
-          );
-        }
-      }
-
-      // Function to set up all event listeners
-      function setupEventListeners() {
-        // Payment dropdown functionality
-        const paymentButton = document.getElementById("paymentButton");
-        const paymentOptions = document.getElementById("paymentOptions");
-        const dropdownOptions = document.querySelectorAll(".dropdown-option");
-
-        if (paymentButton && paymentOptions) {
-          paymentButton.addEventListener("click", (e) => {
-            e.stopPropagation();
-            paymentOptions.classList.toggle("show");
-          });
-        }
-
-        if (dropdownOptions) {
-          dropdownOptions.forEach((option) => {
-            option.addEventListener("click", () => {
-              paymentButton.textContent = option.textContent;
-              paymentOptions.classList.remove("show");
-            });
-          });
-        }
-
-        // Calendar functionality
-        const editIcon = document.getElementById("edit-icon");
-        const datePicker = document.getElementById("datetime-picker");
-
-        if (editIcon && datePicker) {
-          editIcon.addEventListener("click", (e) => {
-            e.stopPropagation();
-            datePicker.classList.toggle("visible");
-            if (datePicker.classList.contains("visible")) {
-              const today = new Date().toISOString().split("T")[0];
-              datePicker.value = today;
-            }
-          });
-
-          datePicker.addEventListener("change", (event) => {
-            const newDate = new Date(event.target.value);
-            if (newDate) {
-              newDate.setHours(currentDateTime.getHours());
-              newDate.setMinutes(currentDateTime.getMinutes());
-              currentDateTime = newDate;
-              updateDateTime();
-              datePicker.classList.remove("visible");
-            }
-          });
-        }
-
-        // Close dropdowns when clicking outside
-        document.addEventListener("click", (event) => {
-          if (datePicker && !event.target.closest(".calendar-container")) {
-            datePicker.classList.remove("visible");
-          }
-          if (paymentOptions && !event.target.closest(".payment-dropdown")) {
-            paymentOptions.classList.remove("show");
-          }
-        });
-
-        // Handle window resize for scanner
-        window.addEventListener("resize", () => {
-          const reader = document.getElementById("reader");
-          if (reader) {
-            reader.style.height = "100%";
-          }
-        });
-
-        // Create bill button click handler
-        const createBillBtn = document.querySelector(".create-bill");
-        if (createBillBtn) {
-          createBillBtn.addEventListener("click", handleButtonClick);
-        }
-      }
-
-      // Initialize QR scanner
-      function initQRScanner() {
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", {
-          fps: 10,
-          qrbox: { width: 350, height: 200 },
-          aspectRatio: 1.0,
-          showTorchButtonIfSupported: true,
-        });
-
-        html5QrcodeScanner.render((decodedText) => {
-          console.log("Barcode scanned:", decodedText);
-          // Check if the scanned barcode exists in our products
-          if (allProducts[decodedText]) {
-            // Product found, add to cart
-            addToCart(decodedText);
-          } else {
-            // Product not found
-            showProductNotFound(decodedText);
-          }
-        });
-      }
-
-      // Function to show "Product not found" message
-      function showProductNotFound(barcode) {
-        console.log("Product not found:", barcode);
-
-        // Play an error sound if available
-        const errorSound = document.getElementById("error-sound");
-        if (errorSound) {
-          errorSound.currentTime = 0;
-          errorSound
-            .play()
-            .catch((err) => console.log("Error playing sound:", err));
-        }
-
-        // Show an alert or toast notification
-        alert(`Product not found with barcode: ${barcode}`);
-      }
-
-      // Function to update date and time display
-      function updateDateTime() {
-        const dateElement = document.getElementById("current-date");
-        if (!dateElement) return;
-
-        const options = {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        };
-        dateElement.textContent = currentDateTime.toLocaleString(
-          undefined,
-          options
-        );
-      }
-
-      // Function to add product to cart
-      function addToCart(barcode) {
-        const product = allProducts[barcode];
-        if (product) {
-          const existingItem = cart.find((item) => item.barcode === barcode);
-          if (existingItem) {
-            existingItem.quantity++;
-          } else {
-            cart.push({
-              barcode: barcode,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              quantity: 1,
-            });
-          }
-
-          // Pause scanner briefly
-          if (html5QrcodeScanner) {
-            html5QrcodeScanner.pause(true);
-            setTimeout(() => {
-              html5QrcodeScanner.resume();
-            }, 1000);
-          }
-
-          // Update UI
-          displayCart();
-          updateTotal();
-          playScanSound();
-
-          console.log("Item added to cart:", barcode);
-          console.log("Current cart:", cart);
-        } else {
-          console.log("Product not found:", barcode);
-          showProductNotFound(barcode);
-        }
-      }
-
-      // Function to remove product from cart
-      function removeFromCart(barcode) {
-        const itemIndex = cart.findIndex((item) => item.barcode === barcode);
-        if (itemIndex !== -1) {
-          if (cart[itemIndex].quantity > 1) {
-            cart[itemIndex].quantity--;
-          } else {
-            cart.splice(itemIndex, 1);
-          }
-          displayCart();
-          updateTotal();
-        }
-      }
-
-      // Function to display cart items
-      function displayCart() {
-        const productListContainer = document.getElementById(
-          "product-list-container"
-        );
-        if (!productListContainer) {
-          console.error("Error: product-list-container not found");
-          return;
-        }
-
-        productListContainer.innerHTML = "";
-
-        if (cart.length === 0) {
-          const emptyMessage = document.createElement("div");
-          emptyMessage.className = "empty-cart";
-          emptyMessage.textContent =
-            "No items in cart. Scan products to add them.";
-          productListContainer.appendChild(emptyMessage);
-          return;
-        }
-
-        // Create products list
-        cart.forEach((item) => {
-          const productItem = document.createElement("div");
-          productItem.className = "product-item";
-          productItem.innerHTML = `
-      <div class="product-details">
-        <span class="product-name"><strong>${item.name}</strong></span>
-        <span class="product-price">₹${item.price.toFixed(2)}</span>
-      </div>
-      <div class="quantity-controls">
-        <button class="decrease-btn" onclick="removeFromCart('${
-          item.barcode
-        }')">-</button>
-        <span class="quantity">${item.quantity}</span>
-        <button class="increase-btn" onclick="addToCart('${
-          item.barcode
-        }')">+</button>
-      </div>
-    `;
-
-          productListContainer.appendChild(productItem);
-        });
-
-        // Add styles for product items if not already in CSS
-        if (!document.getElementById("product-item-styles")) {
-          const styles = document.createElement("style");
-          styles.id = "product-item-styles";
-          styles.textContent = `
-      .product-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        margin-bottom: 5px;
-        background-color: #f8f9fa;
-        border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        width: 100%;
-      }
-      .product-details {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-      .product-name {
-        font-size: 16px;
-        margin-bottom: 3px;
-      }
-      .product-price {
-        color: #666;
-      }
-      .quantity-controls {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .decrease-btn, .increase-btn {
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        border: none;
-        background-color: #e9ecef;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-      }
-      .decrease-btn:hover, .increase-btn:hover {
-        background-color: #dee2e6;
-      }
-      .quantity {
-        font-weight: bold;
-        min-width: 20px;
-        text-align: center;
-      }
-    `;
-          document.head.appendChild(styles);
-        }
-
-        console.log("Cart display updated with", cart.length, "items");
-      }
-
-      // Function to update total amount
-      function updateTotal() {
-        let total = 0;
-        cart.forEach((item) => {
-          total += item.quantity * item.price;
-        });
-
-        // Update both total displays
-        const totalElement = document.querySelector(
-          ".right-box p:nth-child(2)"
-        );
-        const createBillButton = document.querySelector(".create-bill span");
-
-        if (totalElement) {
-          totalElement.textContent = `₹${total.toFixed(2)}`;
-          console.log("Total updated:", total.toFixed(2));
-        }
-
-        if (createBillButton) {
-          createBillButton.textContent = `Total (${total.toFixed(2)})`;
-        }
-      }
-
-      // Function to play scan sound
-      function playScanSound() {
-        const scanSound = document.getElementById("scan-sound");
-        if (scanSound) {
-          scanSound.currentTime = 0;
-          scanSound
-            .play()
-            .catch((error) => console.log("Sound play failed:", error));
-        }
-      }
-
-      // Function to store total amount in localStorage
       function storeTotal() {
         // Select the second <p> element within the .right-box div
         const totalAmountElement = document.querySelector(
@@ -1183,7 +781,6 @@
         }
       }
 
-      // Function to save bill to database
       async function saveBillToDatabase() {
         try {
           // Get payment type
@@ -1248,7 +845,6 @@
         }
       }
 
-      // Function to handle create bill button click
       function handleButtonClick() {
         storeTotal();
         saveBillToDatabase()
@@ -1267,36 +863,214 @@
             console.error(error);
           });
       }
+      // Product database
+      const products = {
+        8902519010124: {
+          name: "ClassMate Book A4 Size",
+          price: 75.0,
+          image:
+            "https://sbcstore.in/wp-content/uploads/2022/02/2001019_main_99860fa7-b573-44fd-9eb4-fd01b6458e96_1024x1024.jpg",
+        },
+      };
 
-      // For testing - temporary hardcoded products if API fails
-      function loadFallbackProducts() {
-        return {
-          8902519010124: {
-            name: "ClassMate Book A4 Size",
-            price: 75.0,
-            image:
-              "https://sbcstore.in/wp-content/uploads/2022/02/2001019_main_99860fa7-b573-44fd-9eb4-fd01b6458e96_1024x1024.jpg",
-          },
-          1234567890123: {
-            name: "Test Product 1",
-            price: 100.0,
-            image: "default-product-image.jpg",
-          },
-          9876543210987: {
-            name: "Test Product 2",
-            price: 150.0,
-            image: "default-product-image.jpg",
-          },
-        };
+      // Get DOM elements
+      const productListContainer = document.getElementById(
+        "product-list-container"
+      );
+      const createBillButton = document.querySelector(".create-bill span");
+      const scanSound = document.getElementById("scan-sound");
+
+      let cart = [];
+
+      function updateTotal() {
+        let total = 0;
+        cart.forEach((item) => {
+          total += item.quantity * item.price;
+        });
+        // Update both total displays
+        document.querySelector(
+          ".right-box p:nth-child(2)"
+        ).textContent = `₹${total.toFixed(2)}`;
+        createBillButton.textContent = `Total (${total.toFixed(2)})`;
       }
 
-      // Initialize the app when the page loads
-      document.addEventListener("DOMContentLoaded", initializeApp);
+      function addToCart(barcode) {
+        const product = products[barcode];
+        if (product) {
+          const existingItem = cart.find((item) => item.barcode === barcode);
+          if (existingItem) {
+            existingItem.quantity++;
+          } else {
+            cart.push({
+              barcode: barcode,
+              name: product.name,
+              price: product.price,
+              image: product.image,
+              quantity: 1,
+            });
+          }
+          displayCart();
+          updateTotal();
+          playScanSound();
+        } else {
+          console.log("Product not found:", barcode);
+        }
+      }
 
-      // Make these functions global so they can be accessed from onclick in HTML
-      window.addToCart = addToCart;
-      window.removeFromCart = removeFromCart;
-      window.handleButtonClick = handleButtonClick;
+      function removeFromCart(barcode) {
+        const itemIndex = cart.findIndex((item) => item.barcode === barcode);
+        if (itemIndex !== -1) {
+          if (cart[itemIndex].quantity > 1) {
+            cart[itemIndex].quantity--;
+          } else {
+            cart.splice(itemIndex, 1);
+          }
+          displayCart();
+          updateTotal();
+        }
+      }
+
+      function displayCart() {
+        productListContainer.innerHTML = "";
+
+        if (cart.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.className = "empty-cart";
+          emptyMessage.textContent =
+            "No items in cart. Scan products to add them.";
+          productListContainer.appendChild(emptyMessage);
+          return;
+        }
+
+        cart.forEach((item) => {
+          const listItem = document.createElement("li");
+          listItem.innerHTML = `
+      <img src="${item.image}" alt="${item.name}">
+      <span class="product-name">${item.name}</span>
+      <span class="product-price">₹${item.price.toFixed(2)}</span>
+      <div class="quantity-controls">
+        <button class="decrease" onclick="removeFromCart('${
+          item.barcode
+        }')">-</button>
+        <span class="quantity">${item.quantity}</span>
+        <button class="increase" onclick="addToCart('${
+          item.barcode
+        }')">+</button>
+      </div>
+    `;
+          html5QrcodeScanner.pause(true);
+          setTimeout(() => {
+            html5QrcodeScanner.resume();
+          }, 1000);
+          productListContainer.appendChild(listItem);
+        });
+      }
+
+      function playScanSound() {
+        scanSound.currentTime = 0;
+        scanSound
+          .play()
+          .catch((error) => console.log("Sound play failed:", error));
+      }
+
+      // DateTime functionality
+      let currentDateTime = new Date();
+
+      function updateDateTime() {
+        const dateElement = document.getElementById("current-date");
+        const options = {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        };
+        dateElement.textContent = currentDateTime.toLocaleString(
+          undefined,
+          options
+        );
+      }
+
+      updateDateTime();
+      setInterval(updateDateTime, 60000);
+
+      // Calendar functionality
+      const editIcon = document.getElementById("edit-icon");
+      const datePicker = document.getElementById("datetime-picker");
+
+      editIcon.addEventListener("click", (e) => {
+        e.stopPropagation();
+        datePicker.classList.toggle("visible");
+        if (datePicker.classList.contains("visible")) {
+          const today = new Date().toISOString().split("T")[0];
+          datePicker.value = today;
+        }
+      });
+
+      datePicker.addEventListener("change", (event) => {
+        const newDate = new Date(event.target.value);
+        if (newDate) {
+          newDate.setHours(currentDateTime.getHours());
+          newDate.setMinutes(currentDateTime.getMinutes());
+          currentDateTime = newDate;
+          updateDateTime();
+          datePicker.classList.remove("visible");
+        }
+      });
+
+      function playScanSound() {
+        scanSound.play(); // Play the sound effect
+      }
+      // Payment dropdown functionality
+      const paymentButton = document.getElementById("paymentButton");
+      const paymentOptions = document.getElementById("paymentOptions");
+      const dropdownOptions = document.querySelectorAll(".dropdown-option");
+
+      paymentButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        paymentOptions.classList.toggle("show");
+      });
+
+      dropdownOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+          paymentButton.textContent = option.textContent;
+          paymentOptions.classList.remove("show");
+        });
+      });
+
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".calendar-container")) {
+          datePicker.classList.remove("visible");
+        }
+        if (!event.target.closest(".payment-dropdown")) {
+          paymentOptions.classList.remove("show");
+        }
+      });
+
+      // Initialize QR scanner
+      const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+        fps: 10,
+        qrbox: { width: 350, height: 200 },
+        aspectRatio: 1.0,
+        showTorchButtonIfSupported: true,
+      });
+
+      html5QrcodeScanner.render((decodedText) => {
+        // Handle the scanned barcode
+        addToCart(decodedText);
+      });
+
+      // Initialize display
+      updateTotal();
+
+      // Handle window resize for scanner
+      window.addEventListener("resize", () => {
+        const reader = document.getElementById("reader");
+        if (reader) {
+          reader.style.height = "100%";
+        }
+      });
     </script>
   </body>
 </html>
