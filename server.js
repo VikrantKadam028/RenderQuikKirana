@@ -920,7 +920,7 @@ const sendPushNotification = async (notification) => {
         title: notification.title,
         message: notification.message,
         url: notification.url,
-        icon: '/public/logo.png' // Replace with your icon URL
+        icon: 'https://renderquikkirana.onrender.com/logo.png' // Replace with your icon URL
       },
       {
         headers: {
