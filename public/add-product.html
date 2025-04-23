@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Products Manually</title>
-  
   <style>
     /* Reset and Global Styles */
     * {
@@ -80,6 +79,34 @@
 
     .quantity-container label {
       font-weight: 500;
+    }
+
+    /* Loose Item Section */
+    .loose-item-container {
+      margin-top: 16px;
+      display: none;
+    }
+
+    .loose-item-checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
+
+    .loose-item-price-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .loose-item-price-container label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
     }
 
     /* Variant Section */
@@ -301,6 +328,11 @@
       cursor: pointer;
       color: #333;
     }
+
+    .read-only-field {
+      background-color: #f9f9f9;
+      cursor: not-allowed;
+    }
   </style>
   <script src="https://kit.fontawesome.com/5274d0405c.js" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -313,7 +345,7 @@
       <h1>Add Products Manually</h1>
     </header>
 
-    <div class=" container">
+    <div class="container">
       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYaoYfMAG3k2mzseNmXZIswXGwEyiZVk0eoQ&s"
         alt="Product Icon" class="product-icon" />
 
@@ -321,10 +353,33 @@
 
       <div class="quantity-container">
         <label>Quantity</label>
-        <input type="number" value="0" min="0" class="input-field" />
-        <select class="input-field">
+        <input type="number" value="0" min="0" step="any" class="input-field" id="quantityInput" />
+        <select class="input-field" id="unitSelect">
           <option>Piece</option>
+          <option>Kg</option>
+          <option>g</option>
+          <option>L</option>
+          <option>ml</option>
+          <option>Loose</option>
         </select>
+      </div>
+
+      <div class="loose-item-checkbox-container">
+        <input type="checkbox" id="looseItemCheckbox" />
+        <label for="looseItemCheckbox">This is a loose item</label>
+      </div>
+
+      <div class="loose-item-container" id="looseItemContainer">
+        <div class="loose-item-price-container">
+          <div>
+            <label>Price per unit</label>
+            <input type="number" id="pricePerUnitInput" placeholder="Rs. 0" class="input-field" step="any" />
+          </div>
+          <div>
+            <label>Total Price</label>
+            <input type="text" id="totalPriceInput" placeholder="Rs. 0" class="input-field read-only-field" readonly />
+          </div>
+        </div>
       </div>
 
       <div class="variant-section">
@@ -388,194 +443,251 @@
           <div id="reader"></div>
         </div>
       </div>
-      </div>
+    </div>
 
-      <script>
-        async function fetchProductDetails(productId) {
+    <script>
+      async function fetchProductDetails(productId) {
+        try {
+          const response = await fetch(`https://renderquikkirana.onrender.com/products/single/${productId}`);
+          const data = await response.json();
+
+          if (data.success) {
+            return data.product;
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error) {
+          console.error('Error fetching product details:', error);
+          alert('Failed to fetch product details');
+          return null;
+        }
+      }
+
+      // Function to populate form fields
+      function populateForm(product) {
+        // Update page title
+        document.querySelector('h1').textContent = 'Edit Product';
+
+        // Populate basic info
+        document.querySelector('input[placeholder="Product Name"]').value = product.name;
+        document.querySelector('.quantity-container input').value = product.quantity;
+        document.querySelector('.quantity-container select').value = product.unit;
+
+        // Check if it's a loose item
+        if (product.isLoose) {
+          document.getElementById('looseItemCheckbox').checked = true;
+          toggleLooseItemFields();
+          document.getElementById('pricePerUnitInput').value = product.pricePerUnit || 0;
+          calculateTotalPrice();
+        }
+
+        // Populate barcode
+        document.getElementById('barcodeInput').value = product.barcode || '';
+
+        // Populate prices
+        document.getElementById('mrpInput').value = product.mrp;
+        document.getElementById('InputRetail').value = product.retailPrice;
+        document.getElementById('InputWholesale').value = product.wholesalePrice;
+
+        // Set checkboxes
+        document.getElementById('including-gst').checked = product.includingGst;
+
+        // Set discount
+        document.querySelector('.discount-input').value = product.discount || 0;
+
+        // Store product ID for update operation
+        localStorage.setItem('currentEditProductId', product._id);
+      }
+
+      // Function to toggle loose item fields
+      function toggleLooseItemFields() {
+        const looseItemContainer = document.getElementById('looseItemContainer');
+        const isLooseItem = document.getElementById('looseItemCheckbox').checked;
+        
+        if (isLooseItem) {
+          looseItemContainer.style.display = 'block';
+        } else {
+          looseItemContainer.style.display = 'none';
+        }
+      }
+
+      // Function to calculate total price
+      function calculateTotalPrice() {
+        const quantity = parseFloat(document.getElementById('quantityInput').value) || 0;
+        const pricePerUnit = parseFloat(document.getElementById('pricePerUnitInput').value) || 0;
+        const totalPrice = quantity * pricePerUnit;
+        
+        document.getElementById('totalPriceInput').value = totalPrice.toFixed(2);
+      }
+
+      // Modify the existing save button click handler
+      document.addEventListener("DOMContentLoaded", () => {
+        // Add event listener for loose item checkbox
+        document.getElementById('looseItemCheckbox').addEventListener('change', toggleLooseItemFields);
+
+        // Add event listeners for quantity and price per unit inputs
+        document.getElementById('quantityInput').addEventListener('input', calculateTotalPrice);
+        document.getElementById('pricePerUnitInput').addEventListener('input', calculateTotalPrice);
+
+        // Change unit select behavior
+        document.getElementById('unitSelect').addEventListener('change', function() {
+          if (this.value === 'Loose') {
+            document.getElementById('looseItemCheckbox').checked = true;
+            toggleLooseItemFields();
+          }
+        });
+        
+        // Check if we're in edit mode
+        const editProductId = localStorage.getItem('editProductId');
+
+        if (editProductId) {
+          // Fetch and populate product details
+          fetchProductDetails(editProductId).then(product => {
+            if (product) {
+              populateForm(product);
+            }
+          });
+
+          // Clear the edit flag from localStorage
+          localStorage.removeItem('editProductId');
+        }
+
+        document.querySelector(".btn-save").addEventListener("click", async () => {
+          const currentEditProductId = localStorage.getItem('currentEditProductId');
+          const shopId = localStorage.getItem("shopId");
+
+          if (!shopId) {
+            alert("User is not logged in. Please log in first.");
+            return;
+          }
+
+          // Get all form values
+          const nameInput = document.querySelector(".input-field");
+          const quantityInput = document.querySelector(".quantity-container input");
+          const unitSelect = document.querySelector(".quantity-container select");
+          const barcodeInput = document.getElementById("barcodeInput");
+          const mrpInput = document.getElementById("mrpInput");
+          const retailInput = document.getElementById("InputRetail");
+          const wholesaleInput = document.getElementById("InputWholesale");
+          const includingGstCheckbox = document.getElementById("including-gst");
+          const discountInput = document.querySelector(".discount-input");
+          const isLooseItemCheckbox = document.getElementById("looseItemCheckbox");
+          const pricePerUnitInput = document.getElementById("pricePerUnitInput");
+          const totalPriceInput = document.getElementById("totalPriceInput");
+
+          // Get values safely
+          const productData = {
+            shopId,
+            name: nameInput.value.trim(),
+            quantity: parseFloat(quantityInput.value) || 0,
+            unit: unitSelect.value,
+            barcode: barcodeInput ? barcodeInput.value.trim() : "",
+            mrp: parseFloat(mrpInput.value) || 0,
+            retailPrice: parseFloat(retailInput.value) || 0,
+            wholesalePrice: parseFloat(wholesaleInput.value) || 0,
+            includingGst: includingGstCheckbox ? includingGstCheckbox.checked : false,
+            discount: parseFloat(discountInput ? discountInput.value : "0") || 0,
+            isLoose: isLooseItemCheckbox ? isLooseItemCheckbox.checked : false,
+            pricePerUnit: parseFloat(pricePerUnitInput ? pricePerUnitInput.value : "0") || 0,
+            totalPrice: parseFloat(totalPriceInput ? totalPriceInput.value : "0") || 0
+          };
+
+          // Validate input values
+          if (!productData.name || productData.quantity <= 0) {
+            alert("Please enter valid product name and quantity.");
+            return;
+          }
+
+          if (!productData.isLoose && (productData.mrp <= 0 || productData.retailPrice <= 0 || productData.wholesalePrice <= 0)) {
+            alert("Please enter valid price details for non-loose items.");
+            return;
+          }
+
+          if (productData.isLoose && productData.pricePerUnit <= 0) {
+            alert("Please enter a valid price per unit for loose items.");
+            return;
+          }
+
           try {
-            const response = await fetch(`/products/single/${productId}`);
-            const data = await response.json();
+            const url = currentEditProductId
+              ? `https://renderquikkirana.onrender.com/products/${currentEditProductId}`
+              : "https://renderquikkirana.onrender.com/add-product";
 
+            const method = currentEditProductId ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+              method: method,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(productData),
+            });
+
+            const data = await response.json();
             if (data.success) {
-              return data.product;
+              alert(currentEditProductId ? "Product updated successfully!" : "Product added successfully!");
+              // Clear the edit product ID
+              localStorage.removeItem('currentEditProductId');
+              // Redirect to inventory page
+              window.location.href = 'my_stock.html';
             } else {
-              throw new Error(data.message);
+              alert("Error: " + data.message);
             }
           } catch (error) {
-            console.error('Error fetching product details:', error);
-            alert('Failed to fetch product details');
-            return null;
-          }
-        }
-
-        // Function to populate form fields
-        function populateForm(product) {
-          // Update page title
-          document.querySelector('h1').textContent = 'Edit Product';
-
-          // Populate basic info
-          document.querySelector('input[placeholder="Product Name"]').value = product.name;
-          document.querySelector('.quantity-container input').value = product.quantity;
-          document.querySelector('.quantity-container select').value = product.unit;
-
-          // Populate barcode
-          document.getElementById('barcodeInput').value = product.barcode || '';
-
-          // Populate prices
-          document.getElementById('mrpInput').value = product.mrp;
-          document.getElementById('InputRetail').value = product.retailPrice;
-          document.getElementById('InputWholesale').value = product.wholesalePrice;
-
-          // Set checkboxes
-          document.getElementById('including-gst').checked = product.includingGst;
-
-          // Set discount
-          document.querySelector('.discount-input').value = product.discount || 0;
-
-          // Store product ID for update operation
-          localStorage.setItem('currentEditProductId', product._id);
-        }
-
-        // Modify the existing save button click handler
-        document.addEventListener("DOMContentLoaded", () => {
-          // Check if we're in edit mode
-          const editProductId = localStorage.getItem('editProductId');
-
-          if (editProductId) {
-            // Fetch and populate product details
-            fetchProductDetails(editProductId).then(product => {
-              if (product) {
-                populateForm(product);
-              }
-            });
-
-            // Clear the edit flag from localStorage
-            localStorage.removeItem('editProductId');
-          }
-
-          document.querySelector(".btn-save").addEventListener("click", async () => {
-            const currentEditProductId = localStorage.getItem('currentEditProductId');
-            const shopId = localStorage.getItem("shopId");
-
-            if (!shopId) {
-              alert("User is not logged in. Please log in first.");
-              return;
-            }
-
-            // Get all form values (using your existing code)
-            const nameInput = document.querySelector(".input-field");
-            const quantityInput = document.querySelector(".quantity-container input");
-            const unitSelect = document.querySelector(".quantity-container select");
-            const barcodeInput = document.getElementById("barcodeInput");
-            const mrpInput = document.getElementById("mrpInput");
-            const retailInput = document.getElementById("InputRetail");
-            const wholesaleInput = document.getElementById("InputWholesale");
-            const includingGstCheckbox = document.getElementById("including-gst");
-            const discountInput = document.querySelector(".discount-input");
-
-            // Get values safely
-            const productData = {
-              shopId,
-              name: nameInput.value.trim(),
-              quantity: parseInt(quantityInput.value) || 0,
-              unit: unitSelect.value,
-              barcode: barcodeInput ? barcodeInput.value.trim() : "",
-              mrp: parseFloat(mrpInput.value) || 0,
-              retailPrice: parseFloat(retailInput.value) || 0,
-              wholesalePrice: parseFloat(wholesaleInput.value) || 0,
-              includingGst: includingGstCheckbox ? includingGstCheckbox.checked : false,
-              discount: parseFloat(discountInput ? discountInput.value : "0") || 0
-            };
-
-            // Validate input values
-            if (!productData.name || productData.quantity <= 0 || productData.mrp <= 0 ||
-              productData.retailPrice <= 0 || productData.wholesalePrice <= 0) {
-              alert("Please enter valid product details.");
-              return;
-            }
-
-            try {
-              const url = currentEditProductId
-                ? `/products/${currentEditProductId}`
-                : "/add-product";
-
-              const method = currentEditProductId ? "PUT" : "POST";
-
-              const response = await fetch(url, {
-                method: method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(productData),
-              });
-
-              const data = await response.json();
-              if (data.success) {
-                alert(currentEditProductId ? "Product updated successfully!" : "Product added successfully!");
-                // Clear the edit product ID
-                localStorage.removeItem('currentEditProductId');
-                // Redirect to inventory page
-                window.location.href = 'my_stock.html';
-              } else {
-                alert("Error: " + data.message);
-              }
-            } catch (error) {
-              console.error("Failed to save product:", error);
-              alert("Server error. Please try again later.");
-            }
-          });
-
-          // Handle cancel button
-          document.querySelector(".btn-cancel").addEventListener("click", () => {
-            localStorage.removeItem('currentEditProductId');
-            window.location.href = 'my_stock.html';
-          });
-        });
-
-
-
-        let html5QrcodeScanner = null;
-
-        function startScanner() {
-          document.body.classList.add('scanner-active');
-
-          if (!html5QrcodeScanner) {
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", {
-              fps: 10,
-              qrbox: { width: 250, height: 150 },
-              aspectRatio: 1.0,
-              showTorchButtonIfSupported: true
-            });
-          }
-
-          html5QrcodeScanner.render((decodedText) => {
-            // Handle the scanned barcode
-            document.getElementById('barcodeInput').value = decodedText;
-            stopScanner();
-          });
-        }
-
-        function stopScanner() {
-          if (html5QrcodeScanner) {
-            html5QrcodeScanner.clear();
-            html5QrcodeScanner = null;
-          }
-          document.body.classList.remove('scanner-active');
-        }
-
-        // Handle window resize for scanner
-        window.addEventListener('resize', () => {
-          const reader = document.getElementById('reader');
-          if (reader) {
-            reader.style.height = '300px';
+            console.error("Failed to save product:", error);
+            alert("Server error. Please try again later.");
           }
         });
 
-        // Close scanner when clicking outside
-        document.querySelector('.scanner-overlay').addEventListener('click', (e) => {
-          if (e.target.classList.contains('scanner-overlay')) {
-            stopScanner();
-          }
+        // Handle cancel button
+        document.querySelector(".btn-cancel").addEventListener("click", () => {
+          localStorage.removeItem('currentEditProductId');
+          window.location.href = 'my_stock.html';
         });
-      </script>
+      });
+
+      let html5QrcodeScanner = null;
+
+      function startScanner() {
+        document.body.classList.add('scanner-active');
+
+        if (!html5QrcodeScanner) {
+          html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+            fps: 10,
+            qrbox: { width: 250, height: 150 },
+            aspectRatio: 1.0,
+            showTorchButtonIfSupported: true
+          });
+        }
+
+        html5QrcodeScanner.render((decodedText) => {
+          // Handle the scanned barcode
+          document.getElementById('barcodeInput').value = decodedText;
+          stopScanner();
+        });
+      }
+
+      function stopScanner() {
+        if (html5QrcodeScanner) {
+          html5QrcodeScanner.clear();
+          html5QrcodeScanner = null;
+        }
+        document.body.classList.remove('scanner-active');
+      }
+
+      // Handle window resize for scanner
+      window.addEventListener('resize', () => {
+        const reader = document.getElementById('reader');
+        if (reader) {
+          reader.style.height = '300px';
+        }
+      });
+
+      // Close scanner when clicking outside
+      document.querySelector('.scanner-overlay').addEventListener('click', (e) => {
+        if (e.target.classList.contains('scanner-overlay')) {
+          stopScanner();
+        }
+      });
+    </script>
 </body>
 
 </html>
