@@ -9,7 +9,7 @@ const Order = require("./models/Order");
 const Customer = require("./models/Customers");
 const bcrypt = require("bcryptjs");
 const ShopLocation = require("./models/ShopLocation");
-const billsRoute = require('./routes/bills'); // adjust path if needed
+const billsRoute = require("./routes/bills"); // adjust path if needed
 
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -23,8 +23,7 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use('/api/bills', billsRoute);
-
+app.use("/api/bills", billsRoute);
 
 // MongoDB Connection
 mongoose
@@ -778,6 +777,26 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c; // Distance in km
 }
 
+app.get("/api/customers", async (req, res) => {
+  try {
+    const customers = await Customer.find()
+      .select("-password") // Exclude password for security
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.status(200).json({
+      success: true,
+      customers,
+    });
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch customers",
+      error: error.message,
+    });
+  }
+});
+
 // Send OTP
 app.post("/send-otp", async (req, res) => {
   const { number } = req.body;
@@ -874,7 +893,6 @@ app.post("/reset-otp", (req, res) => {
     message: "OTP has been reset. Please request a new one.",
   });
 });
-
 
 // Serve static files
 app.get("*", (req, res) => {
