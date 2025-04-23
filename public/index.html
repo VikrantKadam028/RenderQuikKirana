@@ -9,6 +9,19 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#ff3131" />
     <title>QuikKirana | Inventory Management & Billing App</title>
+
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <!-- OneSignal Push Notification -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "8cb82455-00d9-4ad3-bfde-df7e596efe04",
+    });
+  });
+</script>
+
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" href="faviconlogo.png" type="image/icon type" />
     <style>
@@ -47,6 +60,8 @@
       <div class="loader-animation"></div>
     </div>
     <div class="main">
+      <div class='onesignal-customlink-container'></div>
+
       <div class="page1">
         <div class="page1section1">
           <img src="whitelogo.png" id="whitelogo" />
