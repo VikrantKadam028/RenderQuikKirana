@@ -10,10 +10,7 @@ const Customer = require("./models/Customers");
 const bcrypt = require("bcryptjs");
 const ShopLocation = require("./models/ShopLocation");
 const billsRoute = require('./routes/bills'); // adjust path if needed
-const axios = require('axios');
-const schedule = require('node-schedule');
-const PUSHALERT_API_KEY = process.env.PUSHALERT_API_KEY;
-const PUSHALERT_BASE_URL = 'https://api.pushalert.co/rest/v1';
+
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -877,121 +874,6 @@ app.post("/reset-otp", (req, res) => {
     message: "OTP has been reset. Please request a new one.",
   });
 });
-
-// Predefined notification messages
-const notificationMessages = [
-  {
-    title: "Kirana ka Full Stock Aaya Hai! 💼",
-    message: "Doodh, dal, chawal sab available hai! Abhi order karo before stock khatam ho jaye!",
-    url: "/inventory"
-  },
-  {
-    title: "Delivery Express Mode On! 🚀",
-    message: "Aaj ka samaan aaj hi milega! Quick delivery, Quikkirana style!",
-    url: "/track-order"
-  },
-  {
-    title: "Bill Clear? Discount bhi Clear! 💸",
-    message: "Billing karo bina tension ke, cashback aur offers bhi milenge!",
-    url: "/billing"
-  },
-  {
-    title: "Fresh Items Just In! 🌽",
-    message: "Sabziyon ka naya stock aa gaya hai – ab no compromise on freshness!",
-    url: "/fresh-stock"
-  },
-  {
-    title: "Weekend Dhamaka Deals! 🛍️",
-    message: "Sirf Saturday-Sunday! Kirane pe khaas chhoot – check karo abhi!",
-    url: "/weekend-deals"
-  },
-  {
-    title: "Delivery Boy Nikal Chuka Hai! 🛵",
-    message: "Tayyar raho! Tumhara Quikkirana samaan raste mein hai!",
-    url: "/delivery-status"
-  }
-];
-
-// Function to send push notification
-const sendPushNotification = async (notification) => {
-  try {
-    const response = await axios.post(`${PUSHALERT_BASE_URL}/notify`, 
-      {
-        title: notification.title,
-        message: notification.message,
-        url: notification.url,
-        icon: 'https://renderquikkirana.onrender.com/logo.png' // Replace with your icon URL
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${PUSHALERT_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    
-    console.log('Push notification sent successfully:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error sending push notification:', error.response?.data || error.message);
-    throw error;
-  }
-};
-
-// Function to send a random notification
-const sendRandomNotification = async () => {
-  try {
-    // Select a random notification from the array
-    const randomIndex = Math.floor(Math.random() * notificationMessages.length);
-    const notification = notificationMessages[randomIndex];
-    
-    await sendPushNotification(notification);
-    console.log(`Random notification sent: ${notification.title}`);
-  } catch (error) {
-    console.error('Failed to send random notification:', error);
-  }
-};
-
-// Schedule notifications - this example sends one every day at 2:00 PM
-const scheduleNotifications = () => {
-  schedule.scheduleJob('*/2 * * * *', sendRandomNotification);
-  console.log('Notification scheduler initialized');
-};
-
-// API endpoint to manually trigger a random notification
-app.post('/api/send-notification', async (req, res) => {
-  try {
-    await sendRandomNotification();
-    res.status(200).json({ success: true, message: 'Notification sent successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to send notification', error: error.message });
-  }
-});
-
-// API endpoint to send a custom notification
-app.post('/api/send-custom-notification', async (req, res) => {
-  try {
-    const { title, message, url } = req.body;
-    
-    if (!title || !message) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Title and message are required' 
-      });
-    }
-    
-    await sendPushNotification({ title, message, url: url || '/' });
-    res.status(200).json({ success: true, message: 'Custom notification sent successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to send notification', error: error.message });
-  }
-});
-
-// Initialize the notification scheduler when the server starts
-// Add this near the end of your file, before the app.listen call
-scheduleNotifications();
-
-
 
 
 // Serve static files
