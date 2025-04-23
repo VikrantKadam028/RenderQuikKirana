@@ -792,7 +792,8 @@
           return productsObj;
         } catch (error) {
           console.error("Error fetching products:", error);
-          throw error;
+          // Return fallback products in case of error
+          return loadFallbackProducts();
         }
       }
 
@@ -833,48 +834,54 @@
         const paymentOptions = document.getElementById("paymentOptions");
         const dropdownOptions = document.querySelectorAll(".dropdown-option");
 
-        paymentButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          paymentOptions.classList.toggle("show");
-        });
-
-        dropdownOptions.forEach((option) => {
-          option.addEventListener("click", () => {
-            paymentButton.textContent = option.textContent;
-            paymentOptions.classList.remove("show");
+        if (paymentButton && paymentOptions) {
+          paymentButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            paymentOptions.classList.toggle("show");
           });
-        });
+        }
+
+        if (dropdownOptions) {
+          dropdownOptions.forEach((option) => {
+            option.addEventListener("click", () => {
+              paymentButton.textContent = option.textContent;
+              paymentOptions.classList.remove("show");
+            });
+          });
+        }
 
         // Calendar functionality
         const editIcon = document.getElementById("edit-icon");
         const datePicker = document.getElementById("datetime-picker");
 
-        editIcon.addEventListener("click", (e) => {
-          e.stopPropagation();
-          datePicker.classList.toggle("visible");
-          if (datePicker.classList.contains("visible")) {
-            const today = new Date().toISOString().split("T")[0];
-            datePicker.value = today;
-          }
-        });
+        if (editIcon && datePicker) {
+          editIcon.addEventListener("click", (e) => {
+            e.stopPropagation();
+            datePicker.classList.toggle("visible");
+            if (datePicker.classList.contains("visible")) {
+              const today = new Date().toISOString().split("T")[0];
+              datePicker.value = today;
+            }
+          });
 
-        datePicker.addEventListener("change", (event) => {
-          const newDate = new Date(event.target.value);
-          if (newDate) {
-            newDate.setHours(currentDateTime.getHours());
-            newDate.setMinutes(currentDateTime.getMinutes());
-            currentDateTime = newDate;
-            updateDateTime();
-            datePicker.classList.remove("visible");
-          }
-        });
+          datePicker.addEventListener("change", (event) => {
+            const newDate = new Date(event.target.value);
+            if (newDate) {
+              newDate.setHours(currentDateTime.getHours());
+              newDate.setMinutes(currentDateTime.getMinutes());
+              currentDateTime = newDate;
+              updateDateTime();
+              datePicker.classList.remove("visible");
+            }
+          });
+        }
 
         // Close dropdowns when clicking outside
         document.addEventListener("click", (event) => {
-          if (!event.target.closest(".calendar-container")) {
+          if (datePicker && !event.target.closest(".calendar-container")) {
             datePicker.classList.remove("visible");
           }
-          if (!event.target.closest(".payment-dropdown")) {
+          if (paymentOptions && !event.target.closest(".payment-dropdown")) {
             paymentOptions.classList.remove("show");
           }
         });
@@ -1024,31 +1031,86 @@
           return;
         }
 
-        // Create an unordered list if it doesn't exist
-        const productList = document.createElement("ul");
-        productList.className = "product-list";
-
+        // Create products list
         cart.forEach((item) => {
-          const listItem = document.createElement("li");
-          listItem.innerHTML = `
-      <img src="${item.image}" alt="${item.name}">
-      <span class="product-name">${item.name}</span>
-      <span class="product-price">₹${item.price.toFixed(2)}</span>
+          const productItem = document.createElement("div");
+          productItem.className = "product-item";
+          productItem.innerHTML = `
+      <div class="product-details">
+        <span class="product-name"><strong>${item.name}</strong></span>
+        <span class="product-price">₹${item.price.toFixed(2)}</span>
+      </div>
       <div class="quantity-controls">
-        <button class="decrease" onclick="removeFromCart('${
+        <button class="decrease-btn" onclick="removeFromCart('${
           item.barcode
         }')">-</button>
         <span class="quantity">${item.quantity}</span>
-        <button class="increase" onclick="addToCart('${
+        <button class="increase-btn" onclick="addToCart('${
           item.barcode
         }')">+</button>
       </div>
     `;
 
-          productList.appendChild(listItem);
+          productListContainer.appendChild(productItem);
         });
 
-        productListContainer.appendChild(productList);
+        // Add styles for product items if not already in CSS
+        if (!document.getElementById("product-item-styles")) {
+          const styles = document.createElement("style");
+          styles.id = "product-item-styles";
+          styles.textContent = `
+      .product-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 5px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        width: 100%;
+      }
+      .product-details {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+      .product-name {
+        font-size: 16px;
+        margin-bottom: 3px;
+      }
+      .product-price {
+        color: #666;
+      }
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .decrease-btn, .increase-btn {
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        border: none;
+        background-color: #e9ecef;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+      }
+      .decrease-btn:hover, .increase-btn:hover {
+        background-color: #dee2e6;
+      }
+      .quantity {
+        font-weight: bold;
+        min-width: 20px;
+        text-align: center;
+      }
+    `;
+          document.head.appendChild(styles);
+        }
+
         console.log("Cart display updated with", cart.length, "items");
       }
 
@@ -1068,8 +1130,6 @@
         if (totalElement) {
           totalElement.textContent = `₹${total.toFixed(2)}`;
           console.log("Total updated:", total.toFixed(2));
-        } else {
-          console.error("Total element not found");
         }
 
         if (createBillButton) {
