@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers | Admin Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link
+  href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+  rel="stylesheet"
+/>
+  <style>
+    :root {
+      --primary:  #0f2027;
+      --primary-dark:  #203a43;
+      --secondary: #10b981;
+      --gray-light: #f9fafb;
+      --gray: #e5e7eb;
+      --text-dark: #111827;
+      --text-light: #6b7280;
+    }
+    
+    body {
+      font-family: poppins;
+      background-color: #f5f7fa;
+      color: var(--text-dark);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      height: 85px;
+    }
+    
+    .customer-card {
+      border-radius: 16px;
+      background-color: white;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .customer-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+    
+    .avatar {
+      background-color: var(--gray-light);
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .date-badge {
+      background-color: #e5e7eb;
+      color: #4b5563;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+    }
+    
+    .empty-state {
+      border: 2px dashed var(--gray);
+      border-radius: 16px;
+    }
+    
+    .loader {
+      border: 3px solid var(--gray);
+      border-radius: 50%;
+      border-top: 3px solid var(--primary);
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .refresh-btn {
+      background-color: var(--primary);
+      transition: all 0.2s ease;
+    }
+    
+    .refresh-btn:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    /* Pull-to-refresh animation */
+    .pull-indicator {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-light);
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .pull-indicator.visible {
+      transform: translateY(0);
+    }
+    
+    .pull-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: spinner 0.8s linear infinite;
+    }
+    
+    @keyframes spinner {
+      to {transform: rotate(360deg);}
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f2937;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      display: flex;
+      align-items: center;
+      max-width: 90%;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    .toast-icon {
+      margin-right: 10px;
+      font-size: 1.1rem;
+    }
+    
+    /* Stats cards */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .stat-title {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-bottom: 5px;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+    
+    .stat-card.primary {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
+    
+    .stat-card.primary .stat-title,
+    .stat-card.primary .stat-value {
+      color: white;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <span class="toast-icon"><i class="fas fa-info-circle"></i></span>
+    <span id="toast-message">Notification message</span>
+  </div>
+
+  <!-- Header -->
+  <header class="header p-4 text-white sticky top-0 z-10">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center">
+        <i class="fas fa-users text-2xl mr-2"></i>
+        <h1 class="text-xl font-bold">Customers</h1>
+      </div>
+      <button id="refreshBtn" class="refresh-btn px-3 py-2 rounded-full flex items-center text-sm">
+        <i class="fas fa-sync-alt mr-1"></i> Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Pull to refresh indicator -->
+  <div class="pull-indicator" id="pullIndicator">
+    <div class="pull-spinner"></div>
+    <span>Refreshing...</span>
+  </div>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-6 pb-20">
+    <!-- Stats Overview -->
+    <div class="stats-container">
+      <div class="stat-card primary">
+        <span class="stat-title">Total Customers</span>
+        <span class="stat-value" id="totalCustomers">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-title">New Today</span>
+        <span class="stat-value" id="newCustomers">0</span>
+      </div>
+    </div>
+    
+    <div class="mb-4">
+      <div class="relative">
+        <input id="searchInput" type="text" placeholder="Search by username or email..." 
+               class="w-full py-3 px-4 bg-white rounded-full pl-12 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
+        <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+      </div>
+    </div>
+    
+    <!-- Customer count summary -->
+    <div class="flex justify-between items-center mb-4">
+      <p class="text-sm text-gray-600"><span id="customerCount">0</span> customers found</p>
+      <div class="text-sm flex items-center">
+        <span id="loadingIndicator" class="hidden">
+          <div class="loader mr-2"></div> Loading...
+        </span>
+      </div>
+    </div>
+    
+    <!-- Customer List -->
+    <div id="customerList" class="space-y-4">
+      <!-- Customers will be populated here -->
+    </div>
+    
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden empty-state p-8 mt-6 text-center">
+      <div class="text-gray-400 mb-2">
+        <i class="fas fa-users text-5xl"></i>
+      </div>
+      <h3 class="text-lg font-medium text-gray-600 mb-1">No customers found</h3>
+      <p class="text-gray-500 text-sm">Try adjusting your search or refresh the page</p>
+    </div>
+  </main>
+
+  <script>
+    // DOM Elements
+    const customerList = document.getElementById('customerList');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+    const customerCount = document.getElementById('customerCount');
+    const totalCustomers = document.getElementById('totalCustomers');
+    const newCustomers = document.getElementById('newCustomers');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const pullIndicator = document.getElementById('pullIndicator');
+    
+    // State
+    let customers = [];
+    let filteredCustomers = [];
+    let isLoading = false;
+    let pullStartY = 0;
+    let pullMoveY = 0;
+    let isPulling = false;
+    let pullThreshold = 80;
+    
+    // Functions
+    function showToast(message, type = 'info') {
+      toastMessage.textContent = message;
+      
+      // Change icon based on type
+      const iconElement = toast.querySelector('.toast-icon i');
+      iconElement.className = type === 'error' 
+        ? 'fas fa-exclamation-circle'
+        : 'fas fa-check-circle';
+      
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+    
+    function setLoading(loading) {
+      isLoading = loading;
+      if (loading) {
+        loadingIndicator.classList.remove('hidden');
+        refreshBtn.disabled = true;
+      } else {
+        loadingIndicator.classList.add('hidden');
+        refreshBtn.disabled = false;
+      }
+    }
+    
+    // Format date to a more readable format
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) {
+        return 'Today';
+      } else if (diffDays === 1) {
+        return 'Yesterday';
+      } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+      } else {
+        return date.toLocaleDateString('en-US', { 
+          month: 'short',
+          day: 'numeric',
+          year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        });
+      }
+    }
+    
+    // Get first letter of name for avatar
+    function getInitial(name) {
+      return (name || '?').charAt(0).toUpperCase();
+    }
+    
+    // Get random color for avatar based on username
+    function getAvatarColor(username) {
+      const colors = [
+        'bg-blue-100 text-blue-600', 
+        'bg-green-100 text-green-600',
+        'bg-yellow-100 text-yellow-600',
+        'bg-purple-100 text-purple-600',
+        'bg-pink-100 text-pink-600',
+        'bg-indigo-100 text-indigo-600'
+      ];
+      
+      // Simple hash function to determine color
+      const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return colors[hash % colors.length];
+    }
+    
+    function renderCustomers() {
+      customerCount.textContent = filteredCustomers.length;
+      totalCustomers.textContent = customers.length;
+      
+      if (filteredCustomers.length === 0) {
+        customerList.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      customerList.innerHTML = filteredCustomers.map(customer => {
+        const avatarColorClass = getAvatarColor(customer.username);
+        
+        return `
+          <div class="customer-card p-4">
+            <div class="flex items-center">
+              <div class="avatar w-12 h-12 rounded-full flex items-center justify-center mr-4 overflow-hidden ${avatarColorClass}">
+                <span class="text-lg font-bold">${getInitial(customer.username)}</span>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <h3 class="font-medium">${customer.username}</h3>
+                  <span class="date-badge">${formatDate(customer.createdAt)}</span>
+                </div>
+                <p class="text-sm text-gray-500">${customer.email}</p>
+              </div>
+            </div>
+            <div class="mt-2 flex justify-end">
+              <button class="text-xs text-blue-500 hover:text-blue-700 transition-colors mr-3">
+                <i class="fas fa-envelope mr-1"></i> Contact
+              </button>
+              <button class="text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                <i class="fas fa-info-circle mr-1"></i> Details
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click events to customer cards
+      document.querySelectorAll('.customer-card').forEach((card, index) => {
+        card.addEventListener('click', () => {
+          // Here you could navigate to customer details or show a modal
+          showToast(`Viewing ${filteredCustomers[index].username}`);
+        });
+      });
+    }
+    
+    async function fetchCustomers() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/customers');
+        const data = await response.json();
+        
+        if (data.success) {
+          customers = data.customers;
+          filteredCustomers = [...customers];
+          
+          // Calculate new customers (registered today)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const todayCustomers = customers.filter(customer => {
+            const customerDate = new Date(customer.createdAt);
+            return customerDate >= today;
+          });
+          
+          newCustomers.textContent = todayCustomers.length;
+          
+          renderCustomers();
+          showToast('Customers loaded successfully');
+        } else {
+          throw new Error(data.message || 'Failed to fetch customers');
+        }
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+        showToast('Failed to load customers', 'error');
+        emptyState.classList.remove('hidden');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    function filterCustomers(query) {
+      if (!query) {
+        filteredCustomers = [...customers];
+      } else {
+        query = query.toLowerCase();
+        filteredCustomers = customers.filter(customer => 
+          (customer.username && customer.username.toLowerCase().includes(query)) ||
+          (customer.email && customer.email.toLowerCase().includes(query))
+        );
+      }
+      renderCustomers();
+    }
+    
+    // Pull to refresh implementation
+    function initPullToRefresh() {
+      window.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) {
+          pullStartY = e.touches[0].pageY;
+          isPulling = true;
+        }
+      });
+      
+      window.addEventListener('touchmove', (e) => {
+        if (!isPulling) return;
+        
+        pullMoveY = e.touches[0].pageY;
+        const distance = pullMoveY - pullStartY;
+        
+        if (distance > 0) {
+          // Prevent default only if we're at the top and pulling down
+          if (window.scrollY === 0) {
+            e.preventDefault();
+            
+            // Calculate pull distance with resistance
+            const pullDistance = Math.min(distance * 0.4, pullThreshold);
+            pullIndicator.style.transform = `translateY(${pullDistance - 50}px)`;
+            
+            if (pullDistance >= pullThreshold) {
+              pullIndicator.querySelector('span').textContent = 'Release to refresh';
+            } else {
+              pullIndicator.querySelector('span').textContent = 'Pull to refresh';
+            }
+          }
+        }
+      }, { passive: false });
+      
+      window.addEventListener('touchend', () => {
+        if (!isPulling) return;
+        
+        const distance = pullMoveY - pullStartY;
+        isPulling = false;
+        
+        if (distance >= pullThreshold) {
+          // Show the indicator fully
+          pullIndicator.style.transform = 'translateY(0)';
+          pullIndicator.classList.add('visible');
+          
+          // Perform refresh
+          fetchCustomers().then(() => {
+            // Hide the indicator with animation
+            setTimeout(() => {
+              pullIndicator.classList.remove('visible');
+              pullIndicator.style.transform = 'translateY(-100%)';
+            }, 800);
+          });
+        } else {
+          // Reset back to hidden
+          pullIndicator.style.transform = 'translateY(-100%)';
+        }
+      });
+    }
+    
+    // Event Listeners
+    searchInput.addEventListener('input', (e) => {
+      filterCustomers(e.target.value);
+    });
+    
+    refreshBtn.addEventListener('click', () => {
+      fetchCustomers();
+    });
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchCustomers();
+      initPullToRefresh();
+      
+      // Simulate some customers for initial development
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        // This mock data is only for development
+        setTimeout(() => {
+          if (customers.length === 0) {
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const lastWeek = new Date(now);
+            lastWeek.setDate(lastWeek.getDate() - 7);
+            
+            customers = [
+              { username: 'johndoe', email: 'john@example.com', createdAt: now.toISOString() },
+              { username: 'janesmith', email: 'jane@example.com', createdAt: yesterday.toISOString() },
+              { username: 'mikebrown', email: 'mike@example.com', createdAt: lastWeek.toISOString() }
+            ];
+            filteredCustomers = [...customers];
+            
+            totalCustomers.textContent = customers.length;
+            newCustomers.textContent = '1';
+            
+            renderCustomers();
+          }
+        }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>
