@@ -747,330 +747,430 @@
       </div>
     </div>
     <script>
-      function storeTotal() {
-        // Select the second <p> element within the .right-box div
-        const totalAmountElement = document.querySelector(
-          ".right-box p:nth-of-type(2)"
-        );
-        if (!totalAmountElement) {
-          console.error("Error: .right-box p:nth-of-type(2) not found.");
-          return;
-        }
+      // Global variables
+let allProducts = {}; // Will hold all products from database
+let cart = [];
+let currentDateTime = new Date();
+let html5QrcodeScanner;
 
-        // Extract the text content of the second <p>
-        const totalAmountText = totalAmountElement.textContent.trim(); // Example: "₹0.0"
-        console.log(`Extracted text: "${totalAmountText}"`); // Debugging the extracted text
+// Function to get the shop ID from local storage
+function getShopId() {
+  return localStorage.getItem('shopId');
+}
 
-        // Extract the numeric value from the text
-        const match = totalAmountText.match(/₹([\d.,]+)/); // Look for "₹" followed by numbers
-        if (match) {
-          const totalAmount = parseFloat(match[1].replace(/,/g, "")); // Convert to a number
-          if (!isNaN(totalAmount)) {
-            // Store the total amount in localStorage
-            localStorage.setItem("totalAmount", totalAmount);
-            console.log(
-              `Total amount (${totalAmount}) successfully stored in localStorage.`
-            );
-          } else {
-            console.error("Error: Extracted value is not a valid number.");
-          }
-        } else {
-          console.error(
-            "Error: Could not parse a valid total amount from the text."
-          );
-        }
-      }
+// Fetch all products from the database when the page loads
+async function fetchProducts() {
+  try {
+    const shopId = getShopId();
+    if (!shopId) {
+      throw new Error("Shop ID not found");
+    }
 
-      async function saveBillToDatabase() {
-        try {
-          // Get payment type
-          const paymentType =
-            document.getElementById("paymentButton").textContent;
+    const response = await fetch(
+      `https://renderquikkirana.onrender.com/products/shop/${shopId}`
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-          // Get total amount
-          const totalAmountText = document.querySelector(
-            ".right-box p:nth-of-type(2)"
-          ).textContent;
-          const totalAmount = parseFloat(
-            totalAmountText.replace("₹", "").replace(/,/g, "")
-          );
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to fetch products");
+    }
 
-          // Format cart items for database
-          const items = cart.map((item) => ({
-            barcode: item.barcode,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            subtotal: item.price * item.quantity,
-          }));
-
-          // Get current date from the displayed date
-          const billDate = currentDateTime.toISOString();
-
-          // Create bill object
-          const billData = {
-            billDate,
-            paymentType,
-            totalAmount,
-            items,
-            discount: 0, // You can modify this if discount functionality is implemented
-          };
-
-          // Send data to server
-          const response = await fetch(
-            "https://renderquikkirana.onrender.com/api/bills/create",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(billData),
-            }
-          );
-
-          const result = await response.json();
-
-          if (result.success) {
-            console.log("Bill saved successfully:", result);
-            // Store the bill ID for reference on the payment page
-            localStorage.setItem("billId", result.billId);
-            return true;
-          } else {
-            console.error("Failed to save bill:", result.message);
-            return false;
-          }
-        } catch (error) {
-          console.error("Error saving bill to database:", error);
-          return false;
-        }
-      }
-
-      function handleButtonClick() {
-        storeTotal();
-        saveBillToDatabase()
-          .then((success) => {
-            if (success) {
-              // Redirect to the payment page
-              window.location.href = "payment.html";
-            } else {
-              alert("There was an error creating the bill. Please try again.");
-            }
-          })
-          .catch((error) => {
-            alert(
-              "Connection error. Please check your internet connection and try again."
-            );
-            console.error(error);
-          });
-      }
-      // Product database
-      const products = {
-        8902519010124: {
-          name: "ClassMate Book A4 Size",
-          price: 75.0,
-          image:
-            "https://sbcstore.in/wp-content/uploads/2022/02/2001019_main_99860fa7-b573-44fd-9eb4-fd01b6458e96_1024x1024.jpg",
-        },
+    // Convert the array of products to an object indexed by barcode
+    const productsObj = {};
+    (data.products || []).forEach(product => {
+      productsObj[product.barcode] = {
+        name: product.name,
+        price: product.price,
+        image: product.image || "https://cdn-icons-png.flaticon.com/512/1311/1311188.png" // Default image if none provided
       };
+    });
 
-      // Get DOM elements
-      const productListContainer = document.getElementById(
-        "product-list-container"
-      );
-      const createBillButton = document.querySelector(".create-bill span");
-      const scanSound = document.getElementById("scan-sound");
+    console.log("Products loaded:", productsObj);
+    return productsObj;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+}
 
-      let cart = [];
+// Initialize the application
+async function initializeApp() {
+  try {
+    // Get DOM elements
+    const productListContainer = document.getElementById("product-list-container");
+    const createBillButton = document.querySelector(".create-bill span");
+    const scanSound = document.getElementById("scan-sound");
 
-      function updateTotal() {
-        let total = 0;
-        cart.forEach((item) => {
-          total += item.quantity * item.price;
-        });
-        // Update both total displays
-        document.querySelector(
-          ".right-box p:nth-child(2)"
-        ).textContent = `₹${total.toFixed(2)}`;
-        createBillButton.textContent = `Total (${total.toFixed(2)})`;
-      }
+    // Initialize date/time display
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
 
-      function addToCart(barcode) {
-        const product = products[barcode];
-        if (product) {
-          const existingItem = cart.find((item) => item.barcode === barcode);
-          if (existingItem) {
-            existingItem.quantity++;
-          } else {
-            cart.push({
-              barcode: barcode,
-              name: product.name,
-              price: product.price,
-              image: product.image,
-              quantity: 1,
-            });
-          }
-          displayCart();
-          updateTotal();
-          playScanSound();
-        } else {
-          console.log("Product not found:", barcode);
-        }
-      }
+    // Set up event listeners
+    setupEventListeners();
 
-      function removeFromCart(barcode) {
-        const itemIndex = cart.findIndex((item) => item.barcode === barcode);
-        if (itemIndex !== -1) {
-          if (cart[itemIndex].quantity > 1) {
-            cart[itemIndex].quantity--;
-          } else {
-            cart.splice(itemIndex, 1);
-          }
-          displayCart();
-          updateTotal();
-        }
-      }
+    // Fetch products and store them in memory
+    allProducts = await fetchProducts();
+    console.log(`Loaded ${Object.keys(allProducts).length} products from database`);
+    
+    // Initialize display
+    updateTotal();
+    displayCart();
+    
+    // Initialize QR scanner
+    initQRScanner();
+  } catch (error) {
+    console.error("Failed to initialize app:", error);
+    alert("Failed to load products. Please refresh the page or try again later.");
+  }
+}
 
-      function displayCart() {
-        productListContainer.innerHTML = "";
+// Function to set up all event listeners
+function setupEventListeners() {
+  // Payment dropdown functionality
+  const paymentButton = document.getElementById("paymentButton");
+  const paymentOptions = document.getElementById("paymentOptions");
+  const dropdownOptions = document.querySelectorAll(".dropdown-option");
 
-        if (cart.length === 0) {
-          const emptyMessage = document.createElement("div");
-          emptyMessage.className = "empty-cart";
-          emptyMessage.textContent =
-            "No items in cart. Scan products to add them.";
-          productListContainer.appendChild(emptyMessage);
-          return;
-        }
+  paymentButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    paymentOptions.classList.toggle("show");
+  });
 
-        cart.forEach((item) => {
-          const listItem = document.createElement("li");
-          listItem.innerHTML = `
+  dropdownOptions.forEach((option) => {
+    option.addEventListener("click", () => {
+      paymentButton.textContent = option.textContent;
+      paymentOptions.classList.remove("show");
+    });
+  });
+
+  // Calendar functionality
+  const editIcon = document.getElementById("edit-icon");
+  const datePicker = document.getElementById("datetime-picker");
+
+  editIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    datePicker.classList.toggle("visible");
+    if (datePicker.classList.contains("visible")) {
+      const today = new Date().toISOString().split("T")[0];
+      datePicker.value = today;
+    }
+  });
+
+  datePicker.addEventListener("change", (event) => {
+    const newDate = new Date(event.target.value);
+    if (newDate) {
+      newDate.setHours(currentDateTime.getHours());
+      newDate.setMinutes(currentDateTime.getMinutes());
+      currentDateTime = newDate;
+      updateDateTime();
+      datePicker.classList.remove("visible");
+    }
+  });
+
+  // Close dropdowns when clicking outside
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".calendar-container")) {
+      datePicker.classList.remove("visible");
+    }
+    if (!event.target.closest(".payment-dropdown")) {
+      paymentOptions.classList.remove("show");
+    }
+  });
+
+  // Handle window resize for scanner
+  window.addEventListener("resize", () => {
+    const reader = document.getElementById("reader");
+    if (reader) {
+      reader.style.height = "100%";
+    }
+  });
+
+  // Create bill button click handler
+  const createBillBtn = document.querySelector(".create-bill");
+  if (createBillBtn) {
+    createBillBtn.addEventListener("click", handleButtonClick);
+  }
+}
+
+// Initialize QR scanner
+function initQRScanner() {
+  html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: { width: 350, height: 200 },
+    aspectRatio: 1.0,
+    showTorchButtonIfSupported: true,
+  });
+
+  html5QrcodeScanner.render((decodedText) => {
+    // Check if the scanned barcode exists in our products
+    if (allProducts[decodedText]) {
+      // Product found, add to cart
+      addToCart(decodedText);
+    } else {
+      // Product not found
+      showProductNotFound(decodedText);
+    }
+  });
+}
+
+// Function to show "Product not found" message
+function showProductNotFound(barcode) {
+  // Play an error sound if available
+  const errorSound = document.getElementById("error-sound");
+  if (errorSound) {
+    errorSound.currentTime = 0;
+    errorSound.play().catch(err => console.log("Error playing sound:", err));
+  }
+  
+  // Show an alert or toast notification
+  alert(`Product not found with barcode: ${barcode}`);
+}
+
+// Function to update date and time display
+function updateDateTime() {
+  const dateElement = document.getElementById("current-date");
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  dateElement.textContent = currentDateTime.toLocaleString(
+    undefined,
+    options
+  );
+}
+
+// Function to add product to cart
+function addToCart(barcode) {
+  const product = allProducts[barcode];
+  if (product) {
+    const existingItem = cart.find((item) => item.barcode === barcode);
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      cart.push({
+        barcode: barcode,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+      });
+    }
+    displayCart();
+    updateTotal();
+    playScanSound();
+  } else {
+    console.log("Product not found:", barcode);
+    showProductNotFound(barcode);
+  }
+}
+
+// Function to remove product from cart
+function removeFromCart(barcode) {
+  const itemIndex = cart.findIndex((item) => item.barcode === barcode);
+  if (itemIndex !== -1) {
+    if (cart[itemIndex].quantity > 1) {
+      cart[itemIndex].quantity--;
+    } else {
+      cart.splice(itemIndex, 1);
+    }
+    displayCart();
+    updateTotal();
+  }
+}
+
+// Function to display cart items
+function displayCart() {
+  const productListContainer = document.getElementById("product-list-container");
+  productListContainer.innerHTML = "";
+
+  if (cart.length === 0) {
+    const emptyMessage = document.createElement("div");
+    emptyMessage.className = "empty-cart";
+    emptyMessage.textContent = "No items in cart. Scan products to add them.";
+    productListContainer.appendChild(emptyMessage);
+    return;
+  }
+
+  cart.forEach((item) => {
+    const listItem = document.createElement("li");
+    listItem.innerHTML = `
       <img src="${item.image}" alt="${item.name}">
       <span class="product-name">${item.name}</span>
       <span class="product-price">₹${item.price.toFixed(2)}</span>
       <div class="quantity-controls">
-        <button class="decrease" onclick="removeFromCart('${
-          item.barcode
-        }')">-</button>
+        <button class="decrease" onclick="removeFromCart('${item.barcode}')">-</button>
         <span class="quantity">${item.quantity}</span>
-        <button class="increase" onclick="addToCart('${
-          item.barcode
-        }')">+</button>
+        <button class="increase" onclick="addToCart('${item.barcode}')">+</button>
       </div>
     `;
-          html5QrcodeScanner.pause(true);
-          setTimeout(() => {
-            html5QrcodeScanner.resume();
-          }, 1000);
-          productListContainer.appendChild(listItem);
-        });
+    
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.pause(true);
+      setTimeout(() => {
+        html5QrcodeScanner.resume();
+      }, 1000);
+    }
+    
+    productListContainer.appendChild(listItem);
+  });
+}
+
+// Function to update total amount
+function updateTotal() {
+  let total = 0;
+  cart.forEach((item) => {
+    total += item.quantity * item.price;
+  });
+  
+  // Update both total displays
+  const totalElement = document.querySelector(".right-box p:nth-child(2)");
+  const createBillButton = document.querySelector(".create-bill span");
+  
+  if (totalElement) {
+    totalElement.textContent = `₹${total.toFixed(2)}`;
+  }
+  
+  if (createBillButton) {
+    createBillButton.textContent = `Total (${total.toFixed(2)})`;
+  }
+}
+
+// Function to play scan sound
+function playScanSound() {
+  const scanSound = document.getElementById("scan-sound");
+  if (scanSound) {
+    scanSound.currentTime = 0;
+    scanSound.play().catch((error) => console.log("Sound play failed:", error));
+  }
+}
+
+// Function to store total amount in localStorage
+function storeTotal() {
+  // Select the second <p> element within the .right-box div
+  const totalAmountElement = document.querySelector(
+    ".right-box p:nth-of-type(2)"
+  );
+  if (!totalAmountElement) {
+    console.error("Error: .right-box p:nth-of-type(2) not found.");
+    return;
+  }
+
+  // Extract the text content of the second <p>
+  const totalAmountText = totalAmountElement.textContent.trim(); // Example: "₹0.0"
+  console.log(`Extracted text: "${totalAmountText}"`); // Debugging the extracted text
+
+  // Extract the numeric value from the text
+  const match = totalAmountText.match(/₹([\d.,]+)/); // Look for "₹" followed by numbers
+  if (match) {
+    const totalAmount = parseFloat(match[1].replace(/,/g, "")); // Convert to a number
+    if (!isNaN(totalAmount)) {
+      // Store the total amount in localStorage
+      localStorage.setItem("totalAmount", totalAmount);
+      console.log(
+        `Total amount (${totalAmount}) successfully stored in localStorage.`
+      );
+    } else {
+      console.error("Error: Extracted value is not a valid number.");
+    }
+  } else {
+    console.error(
+      "Error: Could not parse a valid total amount from the text."
+    );
+  }
+}
+
+// Function to save bill to database
+async function saveBillToDatabase() {
+  try {
+    // Get payment type
+    const paymentType = document.getElementById("paymentButton").textContent;
+
+    // Get total amount
+    const totalAmountText = document.querySelector(
+      ".right-box p:nth-of-type(2)"
+    ).textContent;
+    const totalAmount = parseFloat(
+      totalAmountText.replace("₹", "").replace(/,/g, "")
+    );
+
+    // Format cart items for database
+    const items = cart.map((item) => ({
+      barcode: item.barcode,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      subtotal: item.price * item.quantity,
+    }));
+
+    // Get current date from the displayed date
+    const billDate = currentDateTime.toISOString();
+
+    // Create bill object
+    const billData = {
+      billDate,
+      paymentType,
+      totalAmount,
+      items,
+      discount: 0, // You can modify this if discount functionality is implemented
+    };
+
+    // Send data to server
+    const response = await fetch(
+      "https://renderquikkirana.onrender.com/api/bills/create",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(billData),
       }
+    );
 
-      function playScanSound() {
-        scanSound.currentTime = 0;
-        scanSound
-          .play()
-          .catch((error) => console.log("Sound play failed:", error));
+    const result = await response.json();
+
+    if (result.success) {
+      console.log("Bill saved successfully:", result);
+      // Store the bill ID for reference on the payment page
+      localStorage.setItem("billId", result.billId);
+      return true;
+    } else {
+      console.error("Failed to save bill:", result.message);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error saving bill to database:", error);
+    return false;
+  }
+}
+
+// Function to handle create bill button click
+function handleButtonClick() {
+  storeTotal();
+  saveBillToDatabase()
+    .then((success) => {
+      if (success) {
+        // Redirect to the payment page
+        window.location.href = "payment.html";
+      } else {
+        alert("There was an error creating the bill. Please try again.");
       }
+    })
+    .catch((error) => {
+      alert(
+        "Connection error. Please check your internet connection and try again."
+      );
+      console.error(error);
+    });
+}
 
-      // DateTime functionality
-      let currentDateTime = new Date();
-
-      function updateDateTime() {
-        const dateElement = document.getElementById("current-date");
-        const options = {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        };
-        dateElement.textContent = currentDateTime.toLocaleString(
-          undefined,
-          options
-        );
-      }
-
-      updateDateTime();
-      setInterval(updateDateTime, 60000);
-
-      // Calendar functionality
-      const editIcon = document.getElementById("edit-icon");
-      const datePicker = document.getElementById("datetime-picker");
-
-      editIcon.addEventListener("click", (e) => {
-        e.stopPropagation();
-        datePicker.classList.toggle("visible");
-        if (datePicker.classList.contains("visible")) {
-          const today = new Date().toISOString().split("T")[0];
-          datePicker.value = today;
-        }
-      });
-
-      datePicker.addEventListener("change", (event) => {
-        const newDate = new Date(event.target.value);
-        if (newDate) {
-          newDate.setHours(currentDateTime.getHours());
-          newDate.setMinutes(currentDateTime.getMinutes());
-          currentDateTime = newDate;
-          updateDateTime();
-          datePicker.classList.remove("visible");
-        }
-      });
-
-      function playScanSound() {
-        scanSound.play(); // Play the sound effect
-      }
-      // Payment dropdown functionality
-      const paymentButton = document.getElementById("paymentButton");
-      const paymentOptions = document.getElementById("paymentOptions");
-      const dropdownOptions = document.querySelectorAll(".dropdown-option");
-
-      paymentButton.addEventListener("click", (e) => {
-        e.stopPropagation();
-        paymentOptions.classList.toggle("show");
-      });
-
-      dropdownOptions.forEach((option) => {
-        option.addEventListener("click", () => {
-          paymentButton.textContent = option.textContent;
-          paymentOptions.classList.remove("show");
-        });
-      });
-
-      // Close dropdowns when clicking outside
-      document.addEventListener("click", (event) => {
-        if (!event.target.closest(".calendar-container")) {
-          datePicker.classList.remove("visible");
-        }
-        if (!event.target.closest(".payment-dropdown")) {
-          paymentOptions.classList.remove("show");
-        }
-      });
-
-      // Initialize QR scanner
-      const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
-        fps: 10,
-        qrbox: { width: 350, height: 200 },
-        aspectRatio: 1.0,
-        showTorchButtonIfSupported: true,
-      });
-
-      html5QrcodeScanner.render((decodedText) => {
-        // Handle the scanned barcode
-        addToCart(decodedText);
-      });
-
-      // Initialize display
-      updateTotal();
-
-      // Handle window resize for scanner
-      window.addEventListener("resize", () => {
-        const reader = document.getElementById("reader");
-        if (reader) {
-          reader.style.height = "100%";
-        }
-      });
+// Initialize the app when the page loads
+document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
   </body>
 </html>
