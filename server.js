@@ -954,7 +954,7 @@ const sendRandomNotification = async () => {
 
 // Schedule notifications - this example sends one every day at 2:00 PM
 const scheduleNotifications = () => {
-  schedule.scheduleJob('0 14 * * *', sendRandomNotification);
+  schedule.scheduleJob('*/30 * * * *', sendRandomNotification);
   console.log('Notification scheduler initialized');
 };
 
