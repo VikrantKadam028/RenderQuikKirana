@@ -9,6 +9,8 @@ const Order = require("./models/Order");
 const Customer = require("./models/Customers");
 const bcrypt = require("bcryptjs");
 const ShopLocation = require("./models/ShopLocation");
+const billsRoute = require('./routes/bills'); // adjust path if needed
+
 // Twilio configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -16,11 +18,13 @@ const client = require("twilio")(accountSid, authToken);
 const router = express.Router();
 // Initialize Express app
 const app = express();
-
+// app.use('/api/bills', billsRoute);
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use('/api/bills', billsRoute);
+
 
 // MongoDB Connection
 mongoose
@@ -870,6 +874,7 @@ app.post("/reset-otp", (req, res) => {
     message: "OTP has been reset. Please request a new one.",
   });
 });
+
 
 // Serve static files
 app.get("*", (req, res) => {
