@@ -12,7 +12,6 @@
       src="https://kit.fontawesome.com/5274d0405c.js"
       crossorigin="anonymous"
     ></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
       * {
@@ -782,10 +781,87 @@
         }
       }
 
+      async function saveBillToDatabase() {
+        try {
+          // Get payment type
+          const paymentType =
+            document.getElementById("paymentButton").textContent;
+
+          // Get total amount
+          const totalAmountText = document.querySelector(
+            ".right-box p:nth-of-type(2)"
+          ).textContent;
+          const totalAmount = parseFloat(
+            totalAmountText.replace("₹", "").replace(/,/g, "")
+          );
+
+          // Format cart items for database
+          const items = cart.map((item) => ({
+            barcode: item.barcode,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity,
+          }));
+
+          // Get current date from the displayed date
+          const billDate = currentDateTime.toISOString();
+
+          // Create bill object
+          const billData = {
+            billDate,
+            paymentType,
+            totalAmount,
+            items,
+            discount: 0, // You can modify this if discount functionality is implemented
+          };
+
+          // Send data to server
+          const response = await fetch(
+            "https://renderquikkirana.onrender.com/api/bills/create",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(billData),
+            }
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            console.log("Bill saved successfully:", result);
+            // Store the bill ID for reference on the payment page
+            localStorage.setItem("billId", result.billId);
+            return true;
+          } else {
+            console.error("Failed to save bill:", result.message);
+            return false;
+          }
+        } catch (error) {
+          console.error("Error saving bill to database:", error);
+          return false;
+        }
+      }
+
       function handleButtonClick() {
         storeTotal();
-        // Redirect to the payment page
-        window.location.href = "payment.html";
+        saveBillToDatabase()
+          .then((success) => {
+            if (success) {
+              // Redirect to the payment page
+              window.location.href = "payment.html";
+            } else {
+              alert("There was an error creating the bill. Please try again.");
+            }
+          })
+          .catch((error) => {
+            alert(
+              "Connection error. Please check your internet connection and try again."
+            );
+            console.error(error);
+          });
       }
       // Product database
       const products = {
